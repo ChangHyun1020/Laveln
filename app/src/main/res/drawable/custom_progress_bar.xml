@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 🌊 프로그레스 바: 바다 파도 색상 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape>
+            <corners android:radius="8dp" />
+            <solid android:color="#E1F3FA" /> <!-- 연한 파도 배경 -->
+        </shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape>
+                <corners android:radius="8dp" />
+                <solid android:color="#2B7A9E" /> <!-- 바다색 (Primary) -->
+            </shape>
+        </clip>
+    </item>
+</layer-list>

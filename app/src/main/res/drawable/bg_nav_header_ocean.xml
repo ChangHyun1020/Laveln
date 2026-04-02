@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    🌊 네비게이션 헤더 배경: 바다→하늘 그라데이션
+    상단(바다색) → 하단(밝은 하늘색)으로 자연스러운 전환
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:startColor="#2B7A9E"
+        android:centerColor="#4BA3BF"
+        android:endColor="#A8D8EA"
+        android:angle="270" />
+</shape>

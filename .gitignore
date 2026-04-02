@@ -1,0 +1,58 @@
+# ─────────────────────────────────────────────────────
+# Android .gitignore
+# ─────────────────────────────────────────────────────
+
+# Gradle 빌드 결과물
+.gradle/
+build/
+app/build/
+app/release/
+
+# 로컬 환경 설정 (개인 PC 경로, SDK 경로 등 - 절대 공유 금지)
+local.properties
+
+# Firebase 서비스 키 (보안 민감 파일 - 절대 공유 금지)
+google-services.json
+
+# IDE 설정 (.idea 는 일부 공유, 민감 파일만 제외)
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/*.iml
+
+# Kotlin/Java 컴파일 캐시
+*.class
+*.jar
+*.aar
+
+# ProGuard 매핑 파일
+mapping.txt
+*.hprof
+
+# macOS 메타데이터
+.DS_Store
+
+# Windows 메타데이터
+Thumbs.db
+ehthumbs.db
+
+# 테스트/스크래치 파일
+response.html
+responseT.html
+response_data.json
+response_data_utf8.json
+test_api.json
+test_response.html
+script_error.log
+analyze_dates.py
+find_vessel.py
+inspect_fields.py
+test_csrf.ps1
+test_date_parsing.kts
+test_scrape.py
+
+# APK 배포 파일 (버전 관리 불필요)
+00_apk/

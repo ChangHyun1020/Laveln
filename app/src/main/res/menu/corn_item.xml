@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_Corn1"
+        android:title="오토콘" />
+    <item
+        android:id="@+id/menu_Corn2"
+        android:title="외줄콘" />
+    <item
+        android:id="@+id/menu_Corn3"
+        android:title="두줄콘" />
+
+    <item
+        android:id="@+id/menu_Corn4"
+        android:title="수동콘" />
+
+    <item
+        android:id="@+id/menu_Corn5"
+        android:title="제비콘" />
+
+    <item
+        android:id="@+id/menu_Corn6"
+        android:title="기타" />
+</menu>

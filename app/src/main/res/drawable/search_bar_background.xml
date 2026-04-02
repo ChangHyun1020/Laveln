@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/drawable/search_bar_background.xml
+    SearchView 배경: 흰색 둥근 박스
+    Toolbar(파란 배경) 위에서 검색바가 잘 보이게
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="#FFFFFF" />
+    <corners android:radius="20dp" />
+
+</shape>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="#F8F9FA">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📦 전체 사진 용량 최적화"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#212529"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="기존에 업로드된 모든 선박의 사진을 다운로드하여\n리사이즈(1920px) 및 JPEG 압축(80%) 후 다시 저장합니다."
+        android:textSize="14sp"
+        android:textColor="#6C757D"
+        android:layout_marginBottom="32dp" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="대기 중..."
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#007BFF"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/tvProgressLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="전체 진행률: 0 / 0"
+                android:textSize="13sp"
+                android:layout_marginBottom="8dp" />
+
+            <ProgressBar
+                android:id="@+id/pbVessel"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:progressDrawable="@drawable/custom_progress_bar"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:id="@+id/tvFileProgressLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="현재 파일: 0 / 0"
+                android:textSize="12sp"
+                android:textColor="#ADB5BD"
+                android:layout_marginBottom="4dp" />
+
+            <ProgressBar
+                android:id="@+id/pbFile"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_marginBottom="8dp" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="최적화 프로세스 시작"
+        android:backgroundTint="#007BFF"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="※ 작업이 완료될 때까지 앱을 종료하지 마십시오.\n※ 원본 사진은 덮어씌워지므로 복구할 수 없습니다."
+        android:textSize="12sp"
+        android:textColor="#DC3545"
+        android:gravity="center" />
+
+</LinearLayout>

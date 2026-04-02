@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 🌊 태그 배경: 연한 파도 배경 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#E1F3FA" />
+    <corners android:radius="12dp" />
+</shape>

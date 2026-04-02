@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_Col"
+            android:icon="@android:drawable/ic_menu_call"
+            android:title="@string/nav_contact" />
+    </group>
+
+    <item android:title="@string/nav_dgt_search">
+        <menu>
+            <item
+                android:id="@+id/nav_gotoDgt"
+                android:icon="@android:drawable/ic_menu_search"
+                android:title="@string/nav_dgt_home" />
+        </menu>
+    </item>
+
+    <item android:title="@string/nav_shortcuts">
+        <menu>
+            <item
+                android:id="@+id/nav_direct"
+                android:icon="@android:drawable/ic_menu_directions"
+                android:title="GAEKKOBAK" />
+
+            <item
+                android:id="@+id/nav_gotoBnmt"
+                android:icon="@android:drawable/ic_menu_directions"
+                android:title="다목적" />
+
+            <item
+                android:id="@+id/nav_gotoHjnc"
+                android:icon="@android:drawable/ic_menu_directions"
+                android:title="한진 베이별 현황" />
+        </menu>
+    </item>
+
+    <item android:title="@string/nav_others">
+        <menu>
+
+            <item
+                android:id="@+id/nav_main"
+                android:icon="@android:drawable/ic_menu_agenda"
+                android:title="@string/main_banner" />
+
+            <item
+                android:id="@+id/nav_timeCal"
+                android:icon="@android:drawable/ic_menu_today"
+                android:title="@string/firebase_to_veseel_info" />
+
+            <item
+                android:id="@+id/nav_maker"
+                android:icon="@android:drawable/ic_menu_info_details"
+                android:title="." />
+        </menu>
+    </item>
+</menu>

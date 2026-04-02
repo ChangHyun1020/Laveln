@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:ignore="PhotoAndVideoPolicy,SelectedPhotoAccess" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/rogo"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/rogo"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.VesselV2">
+
+        <!-- 선박 목록 (메인 화면) -->
+        <activity
+            android:name=".ui.activity.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 모선 등록 액티비티 -->
+        <activity
+            android:name=".ui.activity.AddVesselActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 파이어베이스 등록 모선 목록 액티비티 -->
+        <activity
+            android:name=".ui.activity.FirebaseVesselActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 모선 정보 수정 액티비티-->
+        <activity
+            android:name=".ui.activity.EditVesselActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 선박 상세 + 사진 목록 -->
+        <activity
+            android:name=".ui.activity.DetailActivity"
+            android:exported="false" />
+
+        <!-- 사진 추가 -->
+        <activity
+            android:name=".ui.activity.AddPhotoActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 사진 뷰어 -->
+        <activity
+            android:name=".ui.activity.PhotoViewerActivity"
+            android:exported="false" />
+
+        <!-- 일괄 사진 최적화 도구 (관리자) -->
+        <activity
+            android:name=".ui.activity.BulkCompressActivity"
+            android:exported="false"
+            android:label="전체 사진 최적화" />
+
+        <!-- 내 근무 기록 액티비티 -->
+        <activity
+            android:name=".ui.activity.MyWorkActivity"
+            android:exported="false"
+            android:label="내 근무 기록" />
+
+    </application>
+</manifest>

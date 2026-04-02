@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/menu/menu_fab_options.xml
+    ─────────────────────────────
+    FAB 클릭 시 나타나는 팝업 메뉴
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/fab_menu_add"
+        android:title="🚢  모선 등록" />
+
+    <item
+        android:id="@+id/fab_menu_search"
+        android:title="🔍  모선 검색" />
+
+</menu>

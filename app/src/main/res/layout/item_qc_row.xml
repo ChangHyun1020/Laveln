@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- 1층: QC 번호 및 총 작업량 (예: 101(총 작업량 : 513)) -->
+    <TextView
+        android:id="@+id/tvQcHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#CFD8DC"
+        android:gravity="center"
+        android:padding="6dp"
+        android:textColor="@color/on_surface"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:text="101(총 작업량 : 0)" />
+
+    <!-- 2층: 완료량 합계 | 잔여량 합계 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#F5F5F5">
+        <TextView
+            android:id="@+id/tvSummaryComplete"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:textColor="@color/on_surface"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:text="0" />
+        <!-- 세로 구분선 -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#B0BEC5" />
+        <TextView
+            android:id="@+id/tvSummaryRemaining"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="8dp"
+            android:textColor="@color/on_surface"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:text="0" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#B0BEC5" />
+
+    <!-- 3층: 양하 | 적하 | 양하 | 적하 (상세) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvCompDis"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="6dp"
+            android:textColor="@color/on_surface"
+            android:textSize="12sp"
+            android:text="0" />
+        <View
+            android:layout_width="0.5dp"
+            android:layout_height="match_parent"
+            android:background="#CFD8DC" />
+        <TextView
+            android:id="@+id/tvCompLod"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="6dp"
+            android:textColor="@color/on_surface"
+            android:textSize="12sp"
+            android:text="0" />
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#B0BEC5" />
+        <TextView
+            android:id="@+id/tvRemDis"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="6dp"
+            android:textColor="@color/on_surface"
+            android:textSize="12sp"
+            android:text="0" />
+        <View
+            android:layout_width="0.5dp"
+            android:layout_height="match_parent"
+            android:background="#CFD8DC" />
+        <TextView
+            android:id="@+id/tvRemLod"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="6dp"
+            android:textColor="@color/on_surface"
+            android:textSize="12sp"
+            android:text="0" />
+    </LinearLayout>
+
+    <!-- 구분선 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="#B0BEC5" />
+
+</LinearLayout>

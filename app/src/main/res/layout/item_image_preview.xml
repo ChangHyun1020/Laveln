@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    item_image_preview.xml
+    ─────────────────────
+    AddVesselActivity RecyclerView 이미지 썸네일 아이템
+    - 100dp 정사각형 카드 + 우상단 ✕ 삭제 버튼
+    - FrameLayout: 카드 위에 버튼 오버레이
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp">
+
+    <!-- 이미지 썸네일 카드 -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="2dp"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp">
+
+        <ImageView
+            android:id="@+id/ivThumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="사진 미리보기"
+            android:scaleType="centerCrop" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ✕ 삭제 버튼: 카드 우상단 오버레이 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRemove"
+        style="@style/Widget.Material3.Button.IconButton.Filled"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="2dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:insetLeft="0dp"
+        android:insetRight="0dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:contentDescription="이미지 삭제"
+        app:backgroundTint="#CC1A1A1A"
+        app:icon="@android:drawable/ic_menu_close_clear_cancel"
+        app:iconSize="12dp"
+        app:iconTint="#FFFFFF"
+        app:cornerRadius="13dp" />
+
+</FrameLayout>

@@ -1,0 +1,129 @@
+<resources>
+    <string name="app_name">VeIn</string>
+    <string name="app_full_name">Vessel Information App</string>
+    <string name="main_banner">DGT 작업 현황</string>
+
+    <!-- Navigation -->
+    <string name="nav_header_title">선박 정보</string>
+    <string name="nav_menu_open">이동 메뉴 열기</string>
+    <string name="nav_contact">연락망</string>
+    <string name="nav_dgt_search">DGT 조회</string>
+    <string name="nav_dgt_home">DGT 홈페이지</string>
+    <string name="nav_shortcuts">지원용 바로가기</string>
+    <string name="nav_others">기타</string>
+    <string name="firebase_to_veseel_info">등록된 모선</string>
+
+    <!-- Main Activity -->
+    <string name="add_vessel_desc">추가</string>
+    <string name="btn_add">추가</string>
+    <string name="search_hint">검색어를 입력하세요</string>
+    <string name="no_vessel_data">등록된 모선 정보가 없습니다.</string>
+    <string name="no_search_results">검색 결과가 없습니다.</string>
+
+    <string name="dialog_title_delete">삭제 확인</string>
+    <string name="dialog_msg_delete">\'%1$s\' 정보를 파이어베이스에서 삭제하시겠습니까?</string>
+    <string name="toast_delete_success">정상적으로 삭제되었습니다.</string>
+    <string name="toast_delete_fail">삭제 실패: %1$s</string>
+
+    <!-- Add/Edit Vessel -->
+    <string name="title_add_vessel">선박 추가</string>
+    <string name="title_edit_vessel">선박 정보 수정</string>
+    <string name="section_vessel_info">선박 기본 정보</string>
+    <string name="vessel_name_hint">모선명 *</string>
+    <string name="vessel_name_readonly_hint">모선명 (수정 불가)</string>
+    <string name="vessel_name_helper">예) X-PRESS ODYSSEY</string>
+    <string name="vessel_name_readonly_helper">모선명은 고유 ID로 사용되어 수정이 불가능합니다</string>
+    <string name="date_hint">날짜</string>
+    <string name="section_lashing_detail">라싱 디테일 정보</string>
+    <string name="corn_type_hint">콘 타입</string>
+    <string name="row_count_hint">열 개수</string>
+    <string name="floor_count_hint">난간 수</string>
+    <string name="lashing_plan_hint">라싱 플랜</string>
+    <string name="turnbuckle_type_hint">턴버클 타입</string>
+    <string name="twin_hint">20피트</string>
+    <string name="notes_hint">특이사항</string>
+    <string name="section_photos">현장 사진</string>
+    <string name="btn_select_images">사진 선택 (최대 5장)</string>
+    <string name="no_image_selected">선택된 사진 없음</string>
+    <string name="uploading_photos">사진 업로드 중…</string>
+    <string name="btn_save">저장하기</string>
+    <string name="btn_update_complete">수정 완료</string>
+
+    <!-- Detail Activity -->
+    <string name="label_vessel_info">선박 정보</string>
+    <string name="label_corn">콘</string>
+    <string name="label_flan">플랜</string>
+    <string name="label_floor">난간</string>
+    <string name="label_row">열</string>
+    <string name="label_twin">20피트</string>
+    <string name="label_turnbuckle">턴버클</string>
+    <string name="label_notes">기타 특이사항</string>
+    <string name="label_registered_photos">등록된 사진</string>
+    <string name="no_registered_photo">등록된 사진이 없습니다</string>
+    <string name="menu_desc">메뉴</string>
+
+    <!-- Time Calculation -->
+    <string name="title_arrival_list">DGT 모선 현황</string>
+    <string name="selected_work_count">선택된 근무 총 갯수 %1$d개</string>
+    <string name="total_work_hours">총 근무 시간 : %1$.1f 시간</string>
+    <string name="total_expected_amount">총 예상 금액 : %1$s원</string>
+    <string name="no_schedule_data">데이터가 없습니다.</string>
+    <string name="btn_save_my_work">내 근무 저장</string>
+
+    <!-- My Work -->
+    <string name="title_my_work">내 근무 기록</string>
+    <string name="monthly_total_hours">이달의 총 근무 : %1$.1f 시간</string>
+    <string name="monthly_total_amount">총 예상 급여 : %1$s원</string>
+    <string name="no_work_history">근무 내역이 없습니다.</string>
+
+    <!-- Menu Items -->
+    <string name="menu_edit">✏️  수정</string>
+    <string name="menu_delete">🗑️  삭제</string>
+    <string name="menu_add_photo">현장 사진 추가</string>
+    <string name="menu_compress">현장 사진 용량 최적화</string>
+
+    <!-- Toasts & Dialogs -->
+    <string name="msg_edit_complete">수정 완료되었습니다. 목록에서 다시 확인하세요.</string>
+    <string name="msg_deleting">삭제 중…</string>
+    <string name="msg_delete_complete">기록 [%1$s] 삭제 완료</string>
+    <string name="msg_delete_fail">삭제 실패: %1$s</string>
+    <string name="dialog_title_delete_vessel">선박 삭제</string>
+    <string name="dialog_msg_delete_vessel">[%1$s]\n\n삭제하시겠습니까?\n함께 등록된 사진도\n모두 삭제되며 복구 불가능합니다.</string>
+    <string name="dialog_title_compress_photos">사진 용량 최적화</string>
+    <string name="dialog_msg_compress_photos">[%1$s]\n\n업로드된 사진의 용량을 줄입니다.\n(최대 1920px, JPEG 80%% 품질)\n\n이 작업은 되돌릴 수 없습니다.\n진행하시겠습니까?</string>
+
+    <!-- Additional Kotlin Strings -->
+    <string name="btn_delete">삭제</string>
+    <string name="btn_cancel">취소</string>
+    <string name="btn_cancel_confirm">뒤로가기</string>
+    <string name="btn_continue_input">계속 입력</string>
+    <string name="btn_exit">나가기</string>
+    <string name="btn_continue_edit">수정 계속</string>
+    <string name="btn_compress_start">최적화 시작</string>
+    <string name="dialog_title_cancel_add">작성 취소</string>
+    <string name="dialog_msg_cancel_add">입력한 내용이 사라집니다.\n취소하시겠습니까?</string>
+    <string name="dialog_title_cancel_edit">수정 취소</string>
+    <string name="dialog_msg_cancel_edit">변경된 내용이 저장되지 않습니다.\n나가시겠습니까?</string>
+    <string name="toast_save_success">저장 완료</string>
+    <string name="toast_save_fail">저장 실패: %1$s</string>
+    <string name="toast_image_limit">이미 %1$d장이 선택되어 있습니다.</string>
+    <string name="toast_image_max_info">최대 %1$d장 가능합니다. %2$d장까지만 추가합니다.</string>
+    <string name="toast_record_updated">기록이 수정되었습니다.</string>
+    <string name="toast_deleted">삭제되었습니다.</string>
+    <string name="dialog_title_delete_work">근무 기록 삭제</string>
+    <string name="dialog_msg_delete_work">[%1$s]의 근무 기록을 삭제하시겠습니까?</string>
+    <string name="upload_progress_format">총 %1$d / %2$d 업로드 완료</string>
+    <string name="vessel_edit_title_format">[%1$s] 수정</string>
+    <string name="image_count_format">%1$d / %2$d</string>
+    <string name="photo_count_format">총 %1$d장</string>
+    <string name="compressing_progress_format">최적화 중… %1$d / %2$d</string>
+    <string name="error_csrf_not_found">CSRF 토큰을 찾을 수 없습니다.</string>
+    <string name="dialog_msg_save_work">총 %1$d건의 근무를 \'내 근무\'에 저장하시겠습니까?</string>
+    <string name="toast_save_work_success">%1$d건의 근무가 저장되었습니다.</string>
+    <string name="dialog_msg_vessel_exists">[%1$s]\n이미 등록된 선박입니다. 정보를 확인하시겠습니까?</string>
+    <string name="dialog_msg_vessel_not_found">[%1$s]\n등록된 정보가 없습니다.\n선박을 추가하시겠습니까?</string>
+    <string name="vessel_in_total_time">예정 근무 시간</string>
+    <string name="_90">90도 회전</string>
+    <string name="wor_end_time">작업 완료 시간</string>
+    <string name="work_shift">작업량 (양하 / 선적 / Shift)</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 🚢 상태 배지 배경: 바다 테마 액센트 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="4dp" />
+    <stroke android:width="1dp" android:color="@color/md_primary" />
+    <solid android:color="#1A2B7A9E" /> <!-- md_primary with 10% alpha -->
+</shape>

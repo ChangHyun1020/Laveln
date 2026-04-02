@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    res/menu/menu_vessel_context.xml
+    ─────────────────────────────────────────
+    길게 클릭 시 나타나는 팝업 메뉴
+    item 순서 = 메뉴에 표시되는 순서
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_edit"
+        android:title="@string/menu_edit" />
+
+    <item
+        android:id="@+id/menu_delete"
+        android:title="@string/menu_delete" />
+
+</menu>

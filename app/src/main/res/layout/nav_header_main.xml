@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_nav_header_ocean"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:fitsSystemWindows="true">
+
+    <!--
+        Removed android:gravity="bottom" which can cause InvocationTargetException
+        during inflation in some renderer versions when combined with wrap_content.
+        Added fitsSystemWindows="true" for better status bar handling in NavigationView.
+    -->
+
+    <TextView
+        android:id="@+id/headerMain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/nav_header_title"
+        android:layout_marginStart="10dp"
+        android:textColor="@color/md_onPrimary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="10dp"
+        android:text="@string/app_full_name"
+        android:textColor="@color/md_primary_container"
+        android:textSize="14sp" />
+
+</LinearLayout>

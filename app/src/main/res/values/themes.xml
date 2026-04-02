@@ -1,0 +1,45 @@
+<resources>
+
+    <style name="Theme.VesselV2" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- 🌊 Primary & Secondary (Ocean Breeze) -->
+        <item name="colorPrimary">@color/md_primary</item>
+        <item name="colorOnPrimary">@color/md_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/md_primary_container</item>
+
+        <item name="colorSecondary">@color/md_secondary</item>
+        <item name="colorOnSecondary">@color/md_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/md_secondary_container</item>
+
+        <!-- ☁️ Surface & Background (화이트톤 바다 배경) -->
+        <item name="android:windowBackground">@color/background_light</item>
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+        <item name="android:navigationBarColor">@color/background_light</item>
+        
+        <!-- UI Components -->
+        <item name="colorSurface">@color/surface_light</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+
+    </style>
+
+    <!-- 🏷️ Detail Screen Styles -->
+    <style name="DetailLabel">
+        <item name="android:layout_width">100dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/tag_background_blue</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingVertical">4dp</item>
+        <item name="android:textColor">@color/md_secondary</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="DetailValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:textColor">@color/md_primary</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>

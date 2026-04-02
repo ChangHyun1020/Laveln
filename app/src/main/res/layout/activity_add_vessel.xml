@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ ╔══════════════════════════════════════════════════════════════════╗
+ ║  activity_add_vessel.xml                                         ║
+ ║                                                                  ║
+ ║  [기존 문제]                                                      ║
+ ║  ① ImageView 10개 하드코딩 → 삭제 불가, 유지보수 어려움            ║
+ ║  ② weightSum 중첩 → 레이아웃 성능 저하                            ║
+ ║  ③ 단순 LinearLayout 헤더 → Material AppBar 없음                 ║
+ ║  ④ ProgressBar + 텍스트 분리 배치 → 업로드 UX 불명확             ║
+ ║                                                                  ║
+ ║  [개선]                                                          ║
+ ║  ① RecyclerView(3열 그리드) → 동적 이미지 수, 개별 삭제 가능       ║
+ ║  ② CoordinatorLayout + NestedScrollView → 성능 최적화            ║
+ ║  ③ MaterialToolbar + LinearProgressIndicator → 업로드 진행률     ║
+ ║  ④ 섹션 카드 분리 → 시각적 계층구조 명확                          ║
+ ║  ⑤ 관련 필드 2열 배치 → 공간 효율화                               ║
+ ╚══════════════════════════════════════════════════════════════════╝
+-->
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background_light">
+
+        <!-- ══════════════════════════════════════ -->
+        <!--  ① 상단 AppBar                        -->
+        <!-- ══════════════════════════════════════ -->
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBarLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="0dp"
+            app:liftOnScroll="true"
+            app:liftOnScrollTargetViewId="@id/nestedScrollView">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:navigationIcon="@android:drawable/ic_menu_sort_by_size"
+                app:navigationIconTint="?attr/colorOnSurface"
+                app:title="@string/title_add_vessel"
+                app:titleCentered="true" />
+
+            <!--
+                업로드 진행률 바
+                기존: ProgressBar(원형) + 텍스트뷰 분리 배치
+                개선: LinearProgressIndicator → 직관적 진행률 (0~100%)
+                저장 중에만 VISIBLE
+            -->
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/uploadProgressBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="false"
+                android:visibility="gone"
+                app:trackCornerRadius="0dp" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <!-- ══════════════════════════════════════ -->
+        <!--  ② 스크롤 영역                         -->
+        <!-- ══════════════════════════════════════ -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="88dp"
+            android:fillViewport="true"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- ┌──────────────────────────────┐ -->
+                <!--   카드 A: 모선 기본 정보         -->
+                <!-- └──────────────────────────────┘ -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="14dp"
+                            android:letterSpacing="0.08"
+                            android:text="@string/section_vessel_info"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <!-- vesselName: 필수 입력 (비어있으면 저장 버튼 비활성화) -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/tilVesselName"
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:hint="@string/vessel_name_hint"
+                            app:helperText="@string/vessel_name_helper"
+                            app:startIconDrawable="@android:drawable/ic_menu_compass"
+                            app:startIconTint="?attr/colorPrimary">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/vesselName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionNext"
+                                android:inputType="textCapCharacters"
+                                android:singleLine="true"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- date: focusable=false → 코드에서 DatePickerDialog 표시 -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/date_hint"
+                            app:startIconDrawable="@android:drawable/ic_menu_my_calendar"
+                            app:startIconTint="?attr/colorSecondary">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/addCal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:clickable="true"
+                                android:focusable="false"
+                                android:inputType="date" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ┌──────────────────────────────┐ -->
+                <!--   카드 B: 래싱 상세 정보         -->
+                <!-- └──────────────────────────────┘ -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="14dp"
+                            android:letterSpacing="0.08"
+                            android:text="@string/section_lashing_detail"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <!-- Corn + Row: 관련 필드 2열 묶음 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dp"
+                            android:orientation="horizontal"
+                            android:weightSum="2">
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="5dp"
+                                android:layout_weight="1"
+                                android:hint="@string/corn_type_hint">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/addCorn"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:focusable="false"
+                                    android:gravity="center"
+                                    android:inputType="text" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="5dp"
+                                android:layout_weight="1"
+                                android:hint="@string/row_count_hint">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/addRow"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:imeOptions="actionNext"
+                                    android:inputType="number"
+                                    android:maxLength="2" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                        </LinearLayout>
+
+                        <!-- Floor + Flan: 2열 묶음 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dp"
+                            android:orientation="horizontal"
+                            android:weightSum="2">
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="5dp"
+                                android:layout_weight="1"
+                                android:hint="@string/floor_count_hint">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/addFloor"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:imeOptions="actionNext"
+                                    android:inputType="number"
+                                    android:maxLength="1" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="5dp"
+                                android:layout_weight="1"
+                                android:hint="@string/lashing_plan_hint">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/addFlan"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:focusable="false"
+                                    android:gravity="center"
+                                    android:inputType="text" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                        </LinearLayout>
+
+                        <!-- Turnbuckle + Twin: 2열 묶음 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dp"
+                            android:orientation="horizontal"
+                            android:weightSum="2">
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="5dp"
+                                android:layout_weight="1"
+                                android:hint="@string/turnbuckle_type_hint">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/addTurnburckle"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:imeOptions="actionNext"
+                                    android:inputType="text" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="5dp"
+                                android:layout_weight="1"
+                                android:hint="@string/twin_hint">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/addTwin"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:focusable="false"
+                                    android:gravity="center"
+                                    android:inputType="text" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                        </LinearLayout>
+
+                        <!-- Notes: 전체 너비, 멀티라인 + 글자수 카운터 -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/notes_hint"
+                            app:counterEnabled="true"
+                            app:counterMaxLength="200"
+                            app:startIconDrawable="@android:drawable/ic_menu_edit"
+                            app:startIconTint="?attr/colorTertiary">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/addNotes"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textMultiLine"
+                                android:maxLength="200"
+                                android:maxLines="5"
+                                android:minLines="2"
+                                android:scrollbars="vertical" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ┌──────────────────────────────┐ -->
+                <!--   카드 C: 현장 사진             -->
+                <!-- └──────────────────────────────┘ -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <!-- 헤더: 제목 + 실시간 카운트 배지 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:letterSpacing="0.08"
+                                android:text="@string/section_photos"
+                                android:textColor="?attr/colorPrimary"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <!-- 선택된 이미지 수 실시간 표시 (코드에서 갱신) -->
+                            <TextView
+                                android:id="@+id/tvImageCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 / 5"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <!-- 갤러리 선택 버튼 -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSelectImages"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:layout_marginBottom="12dp"
+                            android:text="@string/btn_select_images"
+                            android:textSize="13sp" />
+
+                        <!--
+                            이미지 없을 때 안내 텍스트
+                            이미지 선택 후 → GONE, rvImages → VISIBLE
+                        -->
+                        <TextView
+                            android:id="@+id/tvNoImage"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:gravity="center"
+                            android:text="@string/no_image_selected"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="13sp" />
+
+                        <!--
+                            [핵심 개선] RecyclerView: 이미지 썸네일 3열 그리드
+                            기존: ImageView 10개 하드코딩 (picture0~picture9)
+                                 → 삭제 불가, 수 고정, 코드 중복
+                            개선: RecyclerView + ImagePreviewAdapter
+                                 → 동적 이미지 수, ✕ 버튼 개별 삭제, DiffUtil 애니메이션
+                        -->
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvImages"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="false"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 업로드 진행 텍스트 (저장 중에만 표시) -->
+                <LinearLayout
+                    android:id="@+id/uploadStatusLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvUploadStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/uploading_photos"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <!-- "3 / 5 업로드 완료" 실시간 텍스트 -->
+                    <TextView
+                        android:id="@+id/tvUploadCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- ══════════════════════════════════════ -->
+        <!--  ③ 하단 저장 버튼 (스크롤과 무관하게 고정) -->
+        <!-- ══════════════════════════════════════ -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addBtn"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:enabled="false"
+            android:text="@string/btn_save"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="28dp" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <!-- 사이드 메뉴(Navigation Drawer) -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header_main"
+        app:itemIconTint="@color/md_primary"
+        app:itemTextColor="@color/text_secondary"
+        app:menu="@menu/nav_menu" />
+
+</androidx.drawerlayout.widget.DrawerLayout>
