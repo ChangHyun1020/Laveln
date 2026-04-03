@@ -59,3 +59,12 @@ test_scrape.py
 
 # 비상 연락망 (버전 관리 제외)
 app/src/main/res/drawable/erm.jpg
+
+# 보안/테스트 스크래핑 설정 등 강제 제외
+*.html
+*.py
+*.json
+DebuggingGuide.md
+TestJsoup.kt
+.idea/
+.vscode/
