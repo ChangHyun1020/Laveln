@@ -57,5 +57,5 @@ test_scrape.py
 # APK 배포 파일 (버전 관리 불필요)
 00_apk/
 
-# 비상 연락망 개인정보 포함함 (버전 관리 제외)
+# 비상 연락망 (버전 관리 제외)
 app/src/main/res/drawable/erm.jpg
