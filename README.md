@@ -6,18 +6,18 @@
 ## 📱 앱 구조 (실제 Firebase 기준)
 
 ```
-Firestore
-└── Lashing/                    ← 기존 컬렉션 (변경 없음)
-    ├── X-PRESS ODYSSEY          ← 문서 (기존 필드 그대로)
+Fb
+└── La/                    ← 기존 컬렉션 (변경 없음)
+    ├── example          ← 문서 (기존 필드 그대로)
     │   ├── Notes: "..."
-    │   ├── corn: "오토콘"
+    │   ├── corn: "dx"
     │   ├── date: "2024-02-22"
     │   ├── flan: "AB"
     │   ├── floor: "1"
     │   ├── row: "15"
-    │   ├── turnburckle: "드라큘라타입"
-    │   ├── twin: "축소"
-    │   ├── vesselName: "X-PRESS ODYSSEY"
+    │   ├── turnburckle: "tt"
+    │   ├── twin: "tt"
+    │   ├── vesselName: "tt"
     │   └── 📁 photos/           ← ✨ 새로 추가되는 서브컬렉션
     │       ├── {photoId}
     │       │   ├── imageUrl: "https://..."
@@ -27,9 +27,9 @@ Firestore
     ├── ALS LUNA
     └── ...
 
-Firebase Storage
-└── lashing_photos/
-    └── X-PRESS_ODYSSEY/
+fs
+└── lp/
+    └── example/
         ├── uuid1.jpg
         └── uuid2.jpg
 ```
