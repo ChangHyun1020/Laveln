@@ -187,20 +187,44 @@ class DgtDataSource {
             val schedules = JSONObject(response.body()).optJSONArray("vesselSchedules") ?: return null
             
             var targetVsl: JSONObject? = null
+            var minDiff = Long.MAX_VALUE
             for (i in 0 until schedules.length()) {
                 val obj = schedules.optJSONObject(i) ?: continue
+                
+                // 1. 고유 코드 정확히 일치 검사
+                if (item.vesselCode.isNotEmpty() &&
+                    obj.optString("vesselCode") == item.vesselCode &&
+                    obj.optString("voyageSeq") == item.voyageSeq &&
+                    obj.optString("voyageYear") == item.voyageYear) {
+                    targetVsl = obj
+                    break // 완전 일치하면 탈출
+                }
+
+                // 2. Fallback: 이름 기반 매칭 시, 현재 아이템 일정과 가장 가까운 스케줄 선택
                 val parsedName = obj.optString("vesselName", "").trim()
                 if (parsedName.contains(item.vesselName.trim(), ignoreCase = true) || item.vesselName.contains(parsedName, ignoreCase = true)) {
-                    targetVsl = obj
-                    break
+                    val stMs = parseMs(obj.optString("etb")) 
+                        ?: parseMs(obj.optString("atb")) 
+                        ?: parseMs(obj.optString("eta")) 
+                        ?: parseMs(obj.optString("ata"))
+                        
+                    if (stMs != null) {
+                        val diff = Math.abs(stMs - item.etbDateMs)
+                        if (diff < minDiff) {
+                            minDiff = diff
+                            targetVsl = obj
+                        }
+                    } else if (targetVsl == null) {
+                        targetVsl = obj
+                    }
                 }
             }
 
             if (targetVsl == null) return null
 
-            val vCode = targetVsl.optString("vesselCode")
-            val vSeq = targetVsl.optString("voyageSeq")
-            val vYear = targetVsl.optString("voyageYear")
+            val vCode = targetVsl.optString("vesselCode").ifEmpty { item.vesselCode }
+            val vSeq = targetVsl.optString("voyageSeq").ifEmpty { item.voyageSeq }
+            val vYear = targetVsl.optString("voyageYear").ifEmpty { item.voyageYear }
             
             val qcList = mutableListOf<QcWorkInfo>()
             if (vCode.isNotEmpty() && vSeq.isNotEmpty()) {
@@ -295,7 +319,10 @@ class DgtDataSource {
             // [보완] 숫자(Number)와 문자열(String) 타입 모두 대응 가능한 방식으로 추출
             dischargeQty = obj.opt("dischargeQty")?.toString() ?: "0",
             loadQty = obj.opt("loadQty")?.toString() ?: "0",
-            shiftQty = obj.opt("shiftQty")?.toString() ?: "0"
+            shiftQty = obj.opt("shiftQty")?.toString() ?: "0",
+            vesselCode = obj.optString("vesselCode", ""),
+            voyageSeq = obj.optString("voyageSeq", ""),
+            voyageYear = obj.optString("voyageYear", "")
         )
     }
 

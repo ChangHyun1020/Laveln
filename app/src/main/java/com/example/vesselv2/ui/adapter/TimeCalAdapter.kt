@@ -35,7 +35,10 @@ data class TimeCalItem(
     val workEndDate: String = "-",
     val dischargeQty: String = "0",
     val loadQty: String = "0",
-    val shiftQty: String = "0"
+    val shiftQty: String = "0",
+    val vesselCode: String = "",
+    val voyageSeq: String = "",
+    val voyageYear: String = ""
 )
 
 @Suppress("DEPRECATION")
