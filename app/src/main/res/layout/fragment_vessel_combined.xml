@@ -12,16 +12,14 @@
 
         <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
 
-            <!-- 1. 상단 그래프 영역 (높이 제한하여 하단 리스트 공간 확보) -->
-            <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="360dp" android:layout_margin="8dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
+            <!-- 1. 상단 그래프 영역 (테이블 사이즈 고정값 적용 - 상하 스크롤 제거) -->
+            <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="8dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
 
-                <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+                <HorizontalScrollView android:id="@+id/scrollViewGraph" android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="horizontal">
 
-                    <HorizontalScrollView android:id="@+id/scrollViewGraph" android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="horizontal">
+                    <com.example.vesselv2.ui.view.BerthScheduleView android:id="@+id/berthScheduleView" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                </HorizontalScrollView>
 
-                        <com.example.vesselv2.ui.view.BerthScheduleView android:id="@+id/berthScheduleView" android:layout_width="wrap_content" android:layout_height="match_parent" />
-                    </HorizontalScrollView>
-                </ScrollView>
             </androidx.cardview.widget.CardView>
 
             <!-- 구분선 -->

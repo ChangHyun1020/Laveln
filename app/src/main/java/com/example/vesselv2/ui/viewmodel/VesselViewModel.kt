@@ -102,6 +102,26 @@ class VesselViewModel : ViewModel() {
     private val _vesselDetail = MutableLiveData<VesselDetailInfo?>()
     val vesselDetail: LiveData<VesselDetailInfo?> = _vesselDetail
 
+    /**
+     * [2026-04-20 추가] QC 상세 조회 진행 여부 플래그 (중복 클릭 방지 전용)
+     *
+     * ▶ 추가 배경:
+     *   기존 코드는 `_isLoading`을 클릭 중복 방지 가드로 사용했으나,
+     *   `_isLoading`은 DGT 전체 스케줄 조회(fetchDgtData)에도 true로 설정됨.
+     *   → 앱 실행 직후 ~ DGT 데이터 접수 완료(5~15초) 동안
+     *      그래프 클릭이 전형 동작하지 않는 문제를 초래했음.
+     *
+     * ▶ 해결 방식:
+     *   `_isDetailLoading`을 별도로 생성하여 QC 상세 조회만의 진행 여부를 관리.
+     *   → DGT 데이터 로딩 중에도 그래프 클릭이 동작하고,
+     *      QC 조회 중 중복 클릭만 이 플래그로 차단.
+     *
+     * ▶ 고려 사항:
+     *   이 LiveData는 현재 Fragment에 노출되지 않음 (private).
+     *   필요 시 확장하여 로딩 인디케이터 UI에 반영 가능.
+     */
+    private val _isDetailLoading = MutableLiveData(false)
+
     /** DGT 리스트용 검색어 (현재 비활성화 — VesselCombinedFragment 검색에서 사용) */
     private val _searchQuery = MutableLiveData("")
     val searchQuery: LiveData<String> = _searchQuery
@@ -343,29 +363,33 @@ class VesselViewModel : ViewModel() {
         }
 
         val kst = TimeZone.getTimeZone("Asia/Seoul")
-        // 오늘 KST 00:00:00
-        val todayStart = Calendar.getInstance(kst).apply {
+        // [2026-07-09 재설계] 그래프 시작점 = D-1(어제) KST 00:00:00
+        val yesterdayStart = Calendar.getInstance(kst).apply {
+            add(Calendar.DAY_OF_YEAR, -1)
             set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }.timeInMillis
 
-        // 오늘 + 7일 KST 23:59:59
-        val weekEnd = Calendar.getInstance(kst).apply {
-            timeInMillis = todayStart
-            add(Calendar.DAY_OF_YEAR, 7)
+        // 그래프 종료 = D-1 + 8일 = D+7 KST 23:59:59
+        val displayEnd = Calendar.getInstance(kst).apply {
+            timeInMillis = yesterdayStart
+            add(Calendar.DAY_OF_YEAR, 8)
             set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
             set(Calendar.SECOND, 59)
         }.timeInMillis
 
         val source = _originalList.value ?: return
         val filtered = source.filter { item ->
-            // 작업 중/접안 중은 항상 표시, 예정은 7일 이내만 표시
+            // 작업중/접안: 항상 표시
+            // 예정/다소: D-1 ~ D+7 범위내 ETB만 표시
             item.vesselStatus == "WORKING" || item.vesselStatus == "BERTHED" ||
-                    (item.vesselStatus == "PLANNED" && item.etbDateMs in todayStart..weekEnd)
+                ((item.vesselStatus == "PLANNED" || item.vesselStatus == "DEPARTED")
+                    && item.etbDateMs in yesterdayStart..displayEnd)
         }.sortedBy { it.etbDateMs } // ETB 오름차순 정렬
 
         _filteredList.value = filtered
-        _graphStartMs.value = todayStart
+        // 그래프 x축 시작점 = 어제 00:00 (BerthScheduleView.setData에 전달됨)
+        _graphStartMs.value = yesterdayStart
     }
 
     /**
@@ -399,12 +423,14 @@ class VesselViewModel : ViewModel() {
         setLoading(true)
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // KST 기준 오늘 ~ +7일 범위로 스케줄 조회
+                // [2026-07-09 재설계] D-1(어제) ~ D+8 범위로 스케줄 조회
+                // (D-1부터 오늘+7일 = 8일, 그래프 표시 범위와 일치시킴)
                 val kstZone = TimeZone.getTimeZone("Asia/Seoul")
                 val cal = Calendar.getInstance(kstZone)
+                cal.add(Calendar.DAY_OF_YEAR, -1) // D-1(어제)부터 시작
                 val sdfParam = SimpleDateFormat("yyyyMMdd", Locale.US).apply { timeZone = kstZone }
                 val fromDate = sdfParam.format(cal.time)
-                cal.add(Calendar.DAY_OF_YEAR, 7)
+                cal.add(Calendar.DAY_OF_YEAR, 9) // D-1 + 9일 = D+8
                 val toDate = sdfParam.format(cal.time)
 
                 val newItems = dgtDataSource.fetchBerthSchedules(fromDate, toDate).toMutableList()
@@ -447,49 +473,66 @@ class VesselViewModel : ViewModel() {
     // ────────────────────────────────────────────────────────────────────────
 
     /**
-     * 그래프에서 특정 선박을 클릭했을 때 실시간 QC 작업 현황을 조회합니다.
+     * 그래프에서 특정 선박를 클릭했을 때 실시간 QC 작업 현황을 조회합니다.
      *
      * ▶ 실행 흐름:
      *   IO 스레드: DgtDataSource.fetchVesselDetails() 호출 (선박 코드 기반 매칭 + QC 조회)
      *   → Main 스레드: VesselDetailInfo 구성 → vesselDetail LiveData 업데이트
      *   → VesselCombinedFragment: vesselDetail 관찰 → QC 다이얼로그 표시
      *
-     * ▶ 중복 호출 방지: isLoading이 true인 경우 새 요청 무시
+     * ▶ [2026-04-20 변경] 중복 호출 방지 로직 개선:
+     *   변경 전: `_isLoading.value == true` 일 때 차단
+     *             → DGT 데이터 로딩 중(5~15초)에도 클릭이 전형 차단됨
+     *   변경 후: `_isDetailLoading.value == true` 일 때만 차단
+     *             → QC 조회 관련 중복에만 반응, DGT 로딩 중에도 클릭 가능
+     *
+     * ▶ [2026-04-20 변경] 실패 시 피드백 추가:
+     *   변경 전: 로그만 출력, 사용자에게 아무 안내 없음
+     *   변경 후: UiEvent.Error 토스트 목록으로 실패 사유 표시
      *
      * @param item 클릭된 선박의 TimeCalItem (vesselCode, voyageSeq, voyageYear 포함)
      */
     fun fetchVesselWorkStatus(item: TimeCalItem) {
-        // 이미 로딩 중이면 중복 호출 방지
-        if (_isLoading.value == true) return
+        if (_isDetailLoading.value == true) return
+        // [2026-07-09 버그 수정] 비동기 postValue 대신 즉시 반영되는 value 사용
+        _isDetailLoading.value = true
         setLoading(true)
-        setVesselDetail(null) // 이전 결과 초기화
+        setVesselDetail(null)
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val result = dgtDataSource.fetchVesselDetails(item)
                 if (result != null) {
                     val (obj, qcList) = result
-                    // DGT 원시 JSON에서 필요한 필드 추출하여 VesselDetailInfo 구성
                     val detailInfo = VesselDetailInfo(
                         item = item,
-                        disQty = obj.optString("dischargeQty", "0"),    // 양하 수량
-                        lodQty = obj.optString("loadQty", "0"),          // 적하 수량
-                        shftQty = obj.optString("shiftQty", "0"),        // 이동(Shift) 수량
+                        disQty = obj.optString("dischargeQty", "0"),
+                        lodQty = obj.optString("loadQty", "0"),
+                        shftQty = obj.optString("shiftQty", "0"),
                         statusStr = obj.optString("status"),
                         qcList = qcList
                     )
                     withContext(Dispatchers.Main) {
                         Log.d("VesselViewModel", "QC 현황 조회 성공: ${item.vesselName}, QC ${qcList.size}개")
                         setVesselDetail(detailInfo)
-                        setLoading(false)
                     }
                 } else {
                     Log.w("VesselViewModel", "QC 현황 조회 실패: ${item.vesselName}")
-                    withContext(Dispatchers.Main) { setLoading(false) }
+                    withContext(Dispatchers.Main) {
+                        _uiEvent.value = UiEvent.Error("'${item.vesselName}' 작업 현황을 불러오지 못했습니다.")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("VesselViewModel", "fetchVesselWorkStatus 오류", e)
-                withContext(Dispatchers.Main) { setLoading(false) }
+                withContext(Dispatchers.Main) {
+                    _uiEvent.value = UiEvent.Error("조회 중 오류가 발생했습니다: ${e.message}")
+                }
+            } finally {
+                // [2026-07-09 버그 수정] 무조건 로딩 상태 해제 보장
+                withContext(Dispatchers.Main) {
+                    setLoading(false)
+                    _isDetailLoading.value = false
+                }
             }
         }
     }

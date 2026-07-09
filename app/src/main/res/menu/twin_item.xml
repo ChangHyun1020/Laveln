@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/menu_twin1"
-        android:title="띄움" />
+        android:title="싱글" />
     <item
         android:id="@+id/menu_twin2"
-        android:title="붙임" />
+        android:title="따블" />
     <item
         android:id="@+id/menu_twin3"
-        android:title="혼합" />
+        android:title="붙임" />
 </menu>

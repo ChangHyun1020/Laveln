@@ -335,10 +335,12 @@ class DgtDataSource {
                 }
 
                 // [2순위 Fallback] 이름 부분 일치 + ETB 기준 가장 가까운 항차
+                // (수정: 띄어쓰기 등 공백때문에 매칭이 안되는 경우 방지 'SEATTLE BRIDGE' vs 'SEATTLEBRIDGE')
                 val parsedName = obj.optString("vesselName", "").trim()
-                if (parsedName.contains(item.vesselName.trim(), ignoreCase = true) ||
-                    item.vesselName.contains(parsedName, ignoreCase = true)
-                ) {
+                val normItemName = item.vesselName.replace("\\s".toRegex(), "").lowercase()
+                val normParsedName = parsedName.replace("\\s".toRegex(), "").lowercase()
+
+                if (normParsedName.contains(normItemName) || normItemName.contains(normParsedName)) {
                     val stMs = parseMs(obj.optString("etb"))
                         ?: parseMs(obj.optString("atb"))
                         ?: parseMs(obj.optString("eta"))
@@ -371,7 +373,9 @@ class DgtDataSource {
             if (vCode.isNotEmpty() && vSeq.isNotEmpty()) {
                 val qcPayload = JSONObject().apply {
                     put("vessel", vCode)
-                    put("voyage", "$vSeq/$vYear") // 형식: "0123/2026"
+                    // vYear가 비어있을 경우 "0123/" 형태가 되어 API 500 에러를 유발하는 문제 수정
+                    val voyageStr = if (vYear.isNotEmpty()) "$vSeq/$vYear" else vSeq
+                    put("voyage", voyageStr)
                     // D: 양하 (Discharge), L: 적하 (Load)
                     put("inOutCodes", JSONArray().put("D").put("L"))
                 }
@@ -384,6 +388,7 @@ class DgtDataSource {
                     .header("Content-Type", "application/json")
                     .requestBody(qcPayload.toString())
                     .ignoreContentType(true)
+                    .maxBodySize(0) // ✅ 기본 2MB 제한 해제 (컨테이너 3,000개 이상 시 초과 발생)
                     .method(Connection.Method.POST)
                     .execute()
 
@@ -474,12 +479,11 @@ class DgtDataSource {
 
         return TimeCalItem(
             vesselName = obj.optString("vesselName"),
-            // 형식: "모선명(서비스레인)" — 그래프/리스트 표시용
             vesselRoute = "${obj.optString("vesselName")}(${obj.optString("serviceLane")})",
-            // 형식: "선석번호(접안 방향)" — 예: "B3(S)"
-            berth = "${obj.optString("berthNo")}(${obj.optString("alongSide")})",
-            etb = fmtDate(stMs),          // 접안 시각 표시용 문자열
-            etd = fmtDate(finalEnMs),     // 출항 시각 표시용 문자열
+            // [2026-07-09] normalizeBerthNo()로 정규화하여 F1/B1~B5 표준 표기 통일
+            berth = "${normalizeBerthNo(obj.optString("berthNo"))}(${obj.optString("alongSide")})",
+            etb = fmtDate(stMs),
+            etd = fmtDate(finalEnMs),
             tradeTime = "-",
             totalHours = calc.totalHours,
             vesselStatus = status,
@@ -495,6 +499,29 @@ class DgtDataSource {
             voyageSeq = obj.optString("voyageSeq", ""),
             voyageYear = obj.optString("voyageYear", "")
         )
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    //  berthNo 정규화
+    // ───────────────────────────────────────────────────────────────────
+
+    /**
+     * [2026-07-09 추가] DGT API의 다양한 berthNo 표기를
+     * 그래프 표준 명칭(F1/B1~B5)으로 정규화합니다.
+     */
+    private fun normalizeBerthNo(raw: String): String {
+        if (raw.isBlank()) return raw
+        val s = raw.trim().replace("-", "").replace(" ", "").uppercase()
+        val match = Regex("^([A-Z]+)0*(\\d+)$").find(s)
+        return if (match != null) {
+            val prefix = match.groupValues[1]
+            val num = match.groupValues[2]
+            when {
+                prefix.startsWith("F") -> "F$num"
+                prefix == "B" -> "B$num"
+                else -> "$prefix$num"
+            }
+        } else s
     }
 
     // ──────────────────────────────────────────────────────────────────────
