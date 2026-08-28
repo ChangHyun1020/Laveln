@@ -15,6 +15,8 @@ import com.example.vesselv2.ui.adapter.TimeCalItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -114,6 +116,12 @@ class VesselViewModel : ViewModel() {
     val workingVesselDetails: LiveData<Map<String, VesselDetailInfo?>> = _workingVesselDetails
 
     /**
+     * [추가] 최초 1회 QC 자동 스크래핑 수행 여부 플래그
+     * Fragment 재생성(화면 회전, 백스택 복귀)에도 유지되도록 ViewModel에서 관리
+     */
+    var hasInitialScraped: Boolean = false
+
+    /**
      * [2026-04-20 추가] QC 상세 조회 진행 여부 플래그 (중복 클릭 방지 전용)
      *
      * ▶ 추가 배경:
@@ -139,11 +147,13 @@ class VesselViewModel : ViewModel() {
 
     /**
      * UI 단발성 이벤트 — 성공/오류 토스트 메시지
-     * ※ 향후 SingleLiveEvent 또는 SharedFlow로 개선 권고
-     *   (현재 구조에서는 화면 복귀 시 중복 발생 가능성 있음)
+     *
+     * Channel(BUFFERED)을 사용하여 SingleShot 이벤트를 보장합니다.
+     * → 화면 복귀(onResume) 시 이전 토스트가 재표시되는 문제를 해결합니다.
+     * Activity/Fragment에서는 repeatOnLifecycle(STARTED) 보여에서 collect하세요.
      */
-    private val _uiEvent = MutableLiveData<UiEvent>()
-    val uiEvent: LiveData<UiEvent> = _uiEvent
+    private val _uiEvent = Channel<UiEvent>(Channel.BUFFERED)
+    val uiEvent = _uiEvent.receiveAsFlow()
 
     // ── 일괄 압축 진행률 상태 (BulkCompressActivity) ──────────────────────
 
@@ -261,9 +271,10 @@ class VesselViewModel : ViewModel() {
             val downloadUrl = repository.uploadPhoto(context, vesselName, uri)
             setLoading(false)
             if (downloadUrl != null) {
-                _uiEvent.value = UiEvent.Success("사진이 업로드되었습니다.")
+                // trySend: Channel에 이벤트 전달 (스레드 안전)
+                _uiEvent.trySend(UiEvent.Success("사진이 업로드되었습니다."))
             } else {
-                _uiEvent.value = UiEvent.Error("업로드에 실패했습니다.")
+                _uiEvent.trySend(UiEvent.Error("업로드에 실패했습니다."))
             }
         }
     }
@@ -288,7 +299,7 @@ class VesselViewModel : ViewModel() {
 
             if (totalFolders == 0) {
                 setLoading(false)
-                _uiEvent.value = UiEvent.Success("압축할 대상 폴더가 없습니다.")
+                _uiEvent.trySend(UiEvent.Success("압축할 대상 폴더가 없습니다."))
                 return@launch
             }
 
@@ -303,7 +314,7 @@ class VesselViewModel : ViewModel() {
             }
 
             setLoading(false)
-            _uiEvent.value = UiEvent.Success("모든 사진 최적화 작업이 완료되었습니다.")
+            _uiEvent.trySend(UiEvent.Success("모든 사진 최적화 작업이 완료되었습니다."))
         }
     }
 
@@ -451,7 +462,7 @@ class VesselViewModel : ViewModel() {
 
                 if (newItems.isEmpty()) {
                     withContext(Dispatchers.Main) {
-                        _uiEvent.value = UiEvent.Error("선박 스케줄을 불러오지 못했거나 데이터가 없습니다.")
+                        _uiEvent.trySend(UiEvent.Error("선박 스케줄을 불러오지 못했거나 데이터가 없습니다."))
                     }
                 }
 
@@ -475,7 +486,7 @@ class VesselViewModel : ViewModel() {
                 Log.e("VesselViewModel", "fetchDgtData 오류", e)
                 withContext(Dispatchers.Main) {
                     setLoading(false)
-                    _uiEvent.value = UiEvent.Error("데이터 처리 중 오류가 발생했습니다: ${e.message}")
+                    _uiEvent.trySend(UiEvent.Error("데이터 처리 중 오류가 발생했습니다: ${e.message}"))
                 }
             }
         }
@@ -535,13 +546,13 @@ class VesselViewModel : ViewModel() {
                 } else {
                     Log.w("VesselViewModel", "QC 현황 조회 실패: ${item.vesselName}")
                     withContext(Dispatchers.Main) {
-                        _uiEvent.value = UiEvent.Error("'${item.vesselName}' 작업 현황을 불러오지 못했습니다.")
+                        _uiEvent.trySend(UiEvent.Error("'${item.vesselName}' 작업 현황을 불러오지 못했습니다."))
                     }
                 }
             } catch (e: Exception) {
                 Log.e("VesselViewModel", "fetchVesselWorkStatus 오류", e)
                 withContext(Dispatchers.Main) {
-                    _uiEvent.value = UiEvent.Error("조회 중 오류가 발생했습니다: ${e.message}")
+                    _uiEvent.trySend(UiEvent.Error("조회 중 오류가 발생했습니다: ${e.message}"))
                 }
             } finally {
                 // [2026-07-09 버그 수정] 무조건 로딩 상태 해제 보장
@@ -598,7 +609,7 @@ class VesselViewModel : ViewModel() {
             if (newItems.isNotEmpty()) {
                 setOriginalData(newItems)
             } else {
-                _uiEvent.value = UiEvent.Error("스케줄 데이터를 불러오지 못했습니다.")
+                _uiEvent.trySend(UiEvent.Error("스케줄 데이터를 불러오지 못했습니다."))
             }
 
             // 2. WORKING 모선 추출 후 병렬(Parallel Async)로 QC 작업 현황 전체 일괄 스크래핑

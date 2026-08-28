@@ -126,4 +126,6 @@
     <string name="_90">90도 회전</string>
     <string name="wor_end_time">작업 완료 시간</string>
     <string name="work_shift">작업량 (양하 / 선적 / Shift)</string>
+    <string name="QC">QC</string>
+    <string name="workView">작업 현황</string>
 </resources>

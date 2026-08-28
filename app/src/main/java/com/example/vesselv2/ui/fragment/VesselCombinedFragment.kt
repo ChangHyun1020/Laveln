@@ -11,19 +11,20 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.viewpager2.widget.ViewPager2
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.vesselv2.databinding.FragmentVesselCombinedBinding
 import com.example.vesselv2.ui.activity.AddVesselActivity
 import com.example.vesselv2.ui.activity.DetailActivity
 import com.example.vesselv2.ui.activity.MainActivity
 import com.example.vesselv2.ui.adapter.TimeCalItem
-import com.example.vesselv2.ui.adapter.WorkingVesselQcAdapter
 import com.example.vesselv2.ui.viewmodel.VesselViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.vesselv2.util.Constants
 import kotlinx.coroutines.Job
+import androidx.compose.ui.draw.alpha  // Modifier.alpha() — setupGraph, updateComposeGraph에서 로딩 시 그래프 반투명 처리용
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -65,17 +66,11 @@ class VesselCombinedFragment : Fragment() {
     // Firestore
     private val db = FirebaseFirestore.getInstance()
 
-    // ViewPager2 어댑터
-    private var qcAdapter: WorkingVesselQcAdapter? = null
-
     // 현재 표시 중인 WORKING 모선 목록
-    private var currentWorkingItems: List<TimeCalItem> = emptyList()
+    private var currentWorkingItems = androidx.compose.runtime.mutableStateOf<List<TimeCalItem>>(emptyList())
 
-    // 최초 1회 QC 데이터 스크래핑 수행 여부 플래그
-    private var hasInitialScraped: Boolean = false
-
-    // ViewPager2 페이지 변경 콜백 (1회 등록 보장)
-    private var pageChangeCallback: ViewPager2.OnPageChangeCallback? = null
+    // 각 모선별 QC 데이터 상태
+    private var qcStates = androidx.compose.runtime.mutableStateOf<Map<String, com.example.vesselv2.ui.view.QcLoadState>>(emptyMap())
 
     // 실시간 자동 갱신 타이머 Coroutine Job
     private var autoRefreshJob: Job? = null
@@ -110,14 +105,12 @@ class VesselCombinedFragment : Fragment() {
         setupGraphToggle()   // [2026-08-28 추가] 그래프 접기/펼치기 초기화
         setupSwipeRefresh()
         setupRefreshControls()
-        setupViewPagerCallback()
+        setupQcPager()
         observeViewModel()
     }
 
     override fun onDestroyView() {
         stopAutoRefresh()
-        pageChangeCallback?.let { binding.vpWorkingVessels.unregisterOnPageChangeCallback(it) }
-        pageChangeCallback = null
         super.onDestroyView()
         _binding = null
     }
@@ -125,8 +118,32 @@ class VesselCombinedFragment : Fragment() {
     // ── 그래프 설정 ──────────────────────────────────────────────────────────
 
     private fun setupGraph() {
-        binding.berthScheduleView.onItemClickListener = { item: TimeCalItem ->
-            handleGraphItemClick(item)
+        binding.berthScheduleComposeView.apply {
+            setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                // 초기에 빈 화면 렌더링, 이후 observeViewModel 에서 갱신됨
+                com.example.vesselv2.ui.view.BerthScheduleGraph(
+                    items = viewModel.filteredList.value ?: emptyList(),
+                    baseDateMs = viewModel.graphStartMs.value ?: System.currentTimeMillis(),
+                    onItemClick = { item: TimeCalItem -> handleGraphItemClick(item) },
+                    modifier = androidx.compose.ui.Modifier.let { m ->
+                        if (viewModel.isLoading.value == true) m.alpha(0.5f) else m
+                    }
+                )
+            }
+        }
+    }
+    
+    private fun updateComposeGraph(items: List<TimeCalItem>, startMs: Long, isLoading: Boolean) {
+        binding.berthScheduleComposeView.setContent {
+            com.example.vesselv2.ui.view.BerthScheduleGraph(
+                items = items,
+                baseDateMs = startMs,
+                onItemClick = { item: TimeCalItem -> handleGraphItemClick(item) },
+                modifier = androidx.compose.ui.Modifier.let { m ->
+                    if (isLoading) m.alpha(0.5f) else m
+                }
+            )
         }
     }
 
@@ -290,8 +307,10 @@ class VesselCombinedFragment : Fragment() {
 
     /** 전체 원스톱 새로고침 동기 수행 (스케줄 + 모든 WORKING QC 병렬 스크래핑) */
     private fun performFullRefresh() {
-        if (currentWorkingItems.isNotEmpty()) {
-            currentWorkingItems.forEach { qcAdapter?.setLoading(it.vesselName) }
+        if (currentWorkingItems.value.isNotEmpty()) {
+            val newMap = qcStates.value.toMutableMap()
+            currentWorkingItems.value.forEach { newMap[it.vesselName] = com.example.vesselv2.ui.view.QcLoadState.Loading }
+            qcStates.value = newMap
         }
         viewModel.refreshAllData()
     }
@@ -315,15 +334,28 @@ class VesselCombinedFragment : Fragment() {
         autoRefreshJob = null
     }
 
-    // ── ViewPager2 콜백 등록 (중복 등록 방지) ────────────────────────────────
+    // ── Compose View 설정 (하단 QC 패널) ───────────────────────────────────
 
-    private fun setupViewPagerCallback() {
-        pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                updatePageIndicator(position, currentWorkingItems.size)
+    private fun setupQcPager() {
+        binding.vpWorkingVesselsCompose.apply {
+            setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val items = currentWorkingItems.value
+                val states = qcStates.value
+
+                // Compose는 Compose UI 렌더링만 담당
+                // llWorkingSection/tvEmpty 가시성 제어는 observeViewModel()에서 수행
+                if (items.isNotEmpty()) {
+                    com.example.vesselv2.ui.view.QcPagerComposable(
+                        workingItems = items,
+                        qcStates = states,
+                        onPageChanged = { page ->
+                            updatePageIndicator(page, items.size)
+                        }
+                    )
+                }
             }
         }
-        binding.vpWorkingVessels.registerOnPageChangeCallback(pageChangeCallback!!)
     }
 
     // ── ViewModel 관찰 ────────────────────────────────────────────────────────
@@ -333,38 +365,47 @@ class VesselCombinedFragment : Fragment() {
         viewModel.filteredList.observe(viewLifecycleOwner) { items ->
             // 1. 선석 그래프 업데이트
             val startMs = viewModel.graphStartMs.value ?: System.currentTimeMillis()
-            binding.berthScheduleView.setData(items, startMs)
+            updateComposeGraph(items, startMs, viewModel.isLoading.value == true)
 
             // 2. WORKING 모선 추출
             val workingItems = items.filter { it.vesselStatus == "WORKING" }
 
-            // 3. WORKING 모선 목록 이름 비교로 불필요한 ViewPager2 재구성 차단
-            val newNames = workingItems.map { it.vesselName }
-            val oldNames = currentWorkingItems.map { it.vesselName }
+            // 3. WORKING 모선 상태 갱신
+            currentWorkingItems.value = workingItems
 
-            if (newNames != oldNames || qcAdapter == null) {
-                currentWorkingItems = workingItems
-                setupViewPager(workingItems)
+            // 4. View 시스템 가시성 제어 — LiveData 옵저버(Main 스레드)에서 안전하게 수행
+            if (workingItems.isEmpty()) {
+                binding.llWorkingSection.visibility = View.GONE
+                binding.tvEmpty.visibility = View.VISIBLE
+            } else {
+                binding.llWorkingSection.visibility = View.VISIBLE
+                binding.tvEmpty.visibility = View.GONE
             }
 
-            // 4. [요구사항 2] 최초 앱 실행 시 작업현황 1회 자동 새로고침(스크래핑)
-            if (!hasInitialScraped && workingItems.isNotEmpty()) {
-                hasInitialScraped = true
-                currentWorkingItems.forEach { qcAdapter?.setLoading(it.vesselName) }
+            // 5. [요구사항 2] 최초 앱 실행 시 작업현황 1회 자동 새로고침(스크래핑)
+            // viewModel.hasInitialScraped: Fragment 재생성(ud654면 회전)에도 유지됨
+            if (!viewModel.hasInitialScraped && workingItems.isNotEmpty()) {
+                viewModel.hasInitialScraped = true
+                val newMap = qcStates.value.toMutableMap()
+                workingItems.forEach { newMap[it.vesselName] = com.example.vesselv2.ui.view.QcLoadState.Loading }
+                qcStates.value = newMap
                 viewModel.fetchAllWorkingVesselStatus(workingItems)
             }
         }
 
         viewModel.graphStartMs.observe(viewLifecycleOwner) { startMs ->
             val items = viewModel.filteredList.value ?: emptyList()
-            binding.berthScheduleView.setData(items, startMs ?: System.currentTimeMillis())
+            updateComposeGraph(items, startMs ?: System.currentTimeMillis(), viewModel.isLoading.value == true)
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            val hasWorking = currentWorkingItems.isNotEmpty()
+            val hasWorking = currentWorkingItems.value.isNotEmpty()
             binding.progressBar.visibility =
                 if (isLoading && !hasWorking) View.VISIBLE else View.GONE
-            binding.berthScheduleView.alpha = if (isLoading) 0.5f else 1.0f
+            
+            val items = viewModel.filteredList.value ?: emptyList()
+            val startMs = viewModel.graphStartMs.value ?: System.currentTimeMillis()
+            updateComposeGraph(items, startMs, isLoading)
 
             // 무한 리프레시 루프 방지: DGT 데이터 로딩 완료 시 isRefreshing 해제
             if (!isLoading) {
@@ -373,35 +414,19 @@ class VesselCombinedFragment : Fragment() {
         }
 
         // Map 수신 시 어댑터 부분 업데이트만 수행
+        // Map 수신 시 상태 갱신
         viewModel.workingVesselDetails.observe(viewLifecycleOwner) { detailMap ->
-            val adapter = qcAdapter ?: return@observe
+            val newMap = qcStates.value.toMutableMap()
             detailMap.forEach { (vesselName, detail) ->
                 if (detail != null) {
-                    adapter.updateDetail(vesselName, detail)
+                    newMap[vesselName] = com.example.vesselv2.ui.view.QcLoadState.Loaded(detail)
+                } else {
+                    newMap[vesselName] = com.example.vesselv2.ui.view.QcLoadState.Error("정보 없음")
                 }
             }
+            qcStates.value = newMap
             binding.swipeRefreshLayout.isRefreshing = false
         }
-    }
-
-    // ── ViewPager2 설정 ───────────────────────────────────────────────────────
-
-    private fun setupViewPager(workingItems: List<TimeCalItem>) {
-        if (workingItems.isEmpty()) {
-            binding.llWorkingSection.visibility = View.GONE
-            binding.tvEmpty.visibility = View.VISIBLE
-            qcAdapter = null
-            return
-        }
-
-        binding.llWorkingSection.visibility = View.VISIBLE
-        binding.tvEmpty.visibility = View.GONE
-
-        // 어댑터 새로 생성 후 설정
-        qcAdapter = WorkingVesselQcAdapter(workingItems)
-        binding.vpWorkingVessels.adapter = qcAdapter
-
-        updatePageIndicator(binding.vpWorkingVessels.currentItem, workingItems.size)
     }
 
     private fun updatePageIndicator(position: Int, total: Int) {

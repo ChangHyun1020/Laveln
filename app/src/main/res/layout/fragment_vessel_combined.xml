@@ -86,8 +86,8 @@
                         android:layout_height="wrap_content"
                         android:scrollbars="horizontal">
 
-                        <com.example.vesselv2.ui.view.BerthScheduleView
-                            android:id="@+id/berthScheduleView"
+                        <androidx.compose.ui.platform.ComposeView
+                            android:id="@+id/berthScheduleComposeView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
                     </HorizontalScrollView>
@@ -172,9 +172,9 @@
 
                     </LinearLayout>
 
-                    <!-- ViewPager2: 모선별 QC 현황 슬라이드 (옵션 B) -->
-                    <androidx.viewpager2.widget.ViewPager2
-                        android:id="@+id/vpWorkingVessels"
+                    <!-- ComposeView: 모선별 QC 현황 슬라이드 (옵션 B) -->
+                    <androidx.compose.ui.platform.ComposeView
+                        android:id="@+id/vpWorkingVesselsCompose"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1" />

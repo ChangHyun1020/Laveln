@@ -7,12 +7,16 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.GravityCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.vesselv2.databinding.ActivityMainBinding
 import com.example.vesselv2.ui.viewmodel.VesselViewModel
 import com.example.vesselv2.util.Constants
 import com.example.vesselv2.util.NavigationHelper
 import com.example.vesselv2.util.setupEdgeToEdgeInsets
+import kotlinx.coroutines.launch
 
 /**
  * [화면] MainActivity — 앱 메인 화면 (선석 스케줄 그래프 + 입항 예정 목록)
@@ -155,17 +159,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * ViewModel LiveData 구독
-     * - uiEvent: 성공/오류 토스트 메시지 표시
-     *   (VesselCombinedFragment가 동일 ViewModel을 공유하므로 Fragment에서 발생한 이벤트도 수신 가능)
+     * ViewModel 이벤트 구독
+     * - uiEvent: Flow collect 방식으로 토스트 메시지 표시
+     *   repeatOnLifecycle(STARTED): 화면이 안 보일 때 collect 중단 → 복귀 시 재표시 효과 없음
      */
     private fun observeViewModel() {
-        viewModel.uiEvent.observe(this) { event ->
-            when (event) {
-                is VesselViewModel.UiEvent.Success ->
-                    Toast.makeText(this, event.message, Toast.LENGTH_SHORT).show()
-                is VesselViewModel.UiEvent.Error ->
-                    Toast.makeText(this, "오류: ${event.message}", Toast.LENGTH_LONG).show()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiEvent.collect { event ->
+                    when (event) {
+                        is VesselViewModel.UiEvent.Success ->
+                            Toast.makeText(this@MainActivity, event.message, Toast.LENGTH_SHORT).show()
+                        is VesselViewModel.UiEvent.Error ->
+                            Toast.makeText(this@MainActivity, "오류: ${event.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         }
     }

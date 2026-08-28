@@ -6,8 +6,12 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.vesselv2.ui.viewmodel.VesselViewModel
 import com.example.vesselv2.databinding.ActivityBulkCompressBinding
+import kotlinx.coroutines.launch
 
 /**
  * [관리자] BulkCompressActivity - 전체 사진 일괄 압축 및 최적화
@@ -80,22 +84,26 @@ class BulkCompressActivity : AppCompatActivity() {
             // 로딩 상태 처리
         }
 
-        viewModel.uiEvent.observe(this) { event ->
-            when (event) {
-                is VesselViewModel.UiEvent.Success -> {
-                    binding.tvStatus.text = "모든 작업이 완료되었습니다."
-                    binding.btnStart.isEnabled = true
-                    AlertDialog.Builder(this)
-                        .setTitle("작업 완료")
-                        .setMessage(event.message)
-                        .setPositiveButton("확인", null)
-                        .show()
-                }
-
-                is VesselViewModel.UiEvent.Error -> {
-                    binding.tvStatus.text = "오류 발생"
-                    binding.btnStart.isEnabled = true
-                    Toast.makeText(this, "오류: ${event.message}", Toast.LENGTH_LONG).show()
+        // uiEvent: Channel 기반 Flow를 collect하여 단발성 이벤트 처리
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiEvent.collect { event ->
+                    when (event) {
+                        is VesselViewModel.UiEvent.Success -> {
+                            binding.tvStatus.text = "모든 작업이 완료되었습니다."
+                            binding.btnStart.isEnabled = true
+                            AlertDialog.Builder(this@BulkCompressActivity)
+                                .setTitle("작업 완료")
+                                .setMessage(event.message)
+                                .setPositiveButton("확인", null)
+                                .show()
+                        }
+                        is VesselViewModel.UiEvent.Error -> {
+                            binding.tvStatus.text = "오류 발생"
+                            binding.btnStart.isEnabled = true
+                            Toast.makeText(this@BulkCompressActivity, "오류: ${event.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
             }
         }

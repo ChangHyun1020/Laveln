@@ -395,7 +395,7 @@
                 android:layout_weight="0.2"
                 android:background="#337AB7"
                 android:gravity="center"
-                android:text="QC 작업량"
+                android:text="QC"
                 android:textColor="@android:color/white"
                 android:textSize="14sp"
                 android:textStyle="bold" />

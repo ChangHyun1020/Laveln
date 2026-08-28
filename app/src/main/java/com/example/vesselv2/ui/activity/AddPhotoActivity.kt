@@ -5,8 +5,12 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.vesselv2.databinding.ActivityAddPhotoBinding
 import com.example.vesselv2.ui.viewmodel.VesselViewModel
+import kotlinx.coroutines.launch
 
 class AddPhotoActivity : AppCompatActivity() {
 
@@ -63,15 +67,19 @@ class AddPhotoActivity : AppCompatActivity() {
                 if (isLoading) android.view.View.VISIBLE else android.view.View.GONE
         }
 
-        viewModel.uiEvent.observe(this) { event ->
-            when (event) {
-                is VesselViewModel.UiEvent.Success -> {
-                    Toast.makeText(this, event.message, Toast.LENGTH_SHORT).show()
-                    finish()
-                }
-
-                is VesselViewModel.UiEvent.Error -> {
-                    Toast.makeText(this, event.message, Toast.LENGTH_LONG).show()
+        // uiEvent: Channel 기반 Flow를 collect하여 단발성 이벤트 처리
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiEvent.collect { event ->
+                    when (event) {
+                        is VesselViewModel.UiEvent.Success -> {
+                            Toast.makeText(this@AddPhotoActivity, event.message, Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                        is VesselViewModel.UiEvent.Error -> {
+                            Toast.makeText(this@AddPhotoActivity, event.message, Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
             }
         }
