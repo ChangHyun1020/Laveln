@@ -64,7 +64,13 @@ app/src/main/res/drawable/erm.jpg
 *.html
 *.py
 *.json
+*.ps1
+CheckBerthNo.java
+TestSeattle.java
 DebuggingGuide.md
 TestJsoup.kt
+FLOWCHART.md
+USER_GUIDE.md
+README.md
 .idea/
 .vscode/
