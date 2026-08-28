@@ -29,15 +29,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-/*
- * [보존 주석] 레거시 리스트 어댑터용 import
- * import androidx.recyclerview.widget.LinearLayoutManager
- * import com.example.vesselv2.ui.adapter.TimeCalAdapter
- * import com.example.vesselv2.data.model.VesselDetailInfo
- * import android.widget.TextView
- * import android.widget.LinearLayout
- * import com.example.vesselv2.R
- */
+
 
 /**
  * [프래그먼트] VesselCombinedFragment — 선석 현황 통합 화면
