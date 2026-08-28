@@ -8,6 +8,14 @@ build/
 app/build/
 app/release/
 
+# Gradle 루트 빌드 설정 및 래퍼
+/build.gradle.kts
+/settings.gradle.kts
+/gradle.properties
+/gradlew
+/gradlew.bat
+/gradle/
+
 # 로컬 환경 설정 (개인 PC 경로, SDK 경로 등 - 절대 공유 금지)
 local.properties
 
