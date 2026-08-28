@@ -178,12 +178,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // [최적화] 화면 복귀 시 과도한 중복 스크래핑을 방지하기 위한 최소 갱신 간격 (15초)
+    private var lastFetchTime: Long = 0L
+
     /**
      * onResume: 화면이 포그라운드로 돌아올 때마다 DGT 데이터 최신화
-     * (다른 화면에서 돌아올 때 데이터 갱신 보장)
+     * (마지막 요청 후 15초 이상 경과 시에만 네트워크 재요청 수행)
      */
     override fun onResume() {
         super.onResume()
-        viewModel.fetchDgtData()
+        val now = System.currentTimeMillis()
+        if (now - lastFetchTime > 15_000L) {
+            lastFetchTime = now
+            viewModel.fetchDgtData()
+        }
     }
 }

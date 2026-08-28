@@ -374,6 +374,31 @@ class DgtDataSource {
         } else s
     }
 
+    // [최적화] SimpleDateFormat 객체 재사용을 위한 ThreadLocal 캐시 (스레드 안전)
+    private val threadLocalFormatters = ThreadLocal.withInitial {
+        mutableMapOf<String, SimpleDateFormat>()
+    }
+
+    private fun getCachedFormatter(pattern: String): SimpleDateFormat {
+        val map = threadLocalFormatters.get() ?: mutableMapOf()
+        return map.getOrPut(pattern) {
+            SimpleDateFormat(pattern, Locale.US).apply {
+                timeZone = kstZone
+                isLenient = false
+            }
+        }
+    }
+
+    private val fmtDateFormatter = ThreadLocal.withInitial {
+        SimpleDateFormat("yy/MM/dd HH:mm", Locale.KOREAN).apply {
+            timeZone = kstZone
+        }
+    }
+
+    /**
+     * [최적화] DGT 날짜 문자열(KST)을 epoch ms로 변환
+     * - 문자열 길이와 구분자에 따라 가장 적합한 단일 포맷을 즉시 선택하여 불필요한 Exception 발생을 방지합니다.
+     */
     private fun parseMs(raw: String?): Long? {
         if (raw.isNullOrEmpty() || raw == "null") return null
 
@@ -382,24 +407,43 @@ class DgtDataSource {
             clean = clean.substringBefore("+").trim()
         }
 
-        val formats = listOf(
-            "yyyy-MM-dd HH:mm:ss.SSSSSS",
-            "yyyy-MM-dd HH:mm:ss.S",
-            "yyyy-MM-dd HH:mm:ss.SS",
-            "yyyy-MM-dd HH:mm:ss.SSS",
+        // 1. 문자열 형태별 최적 단일 패턴 우선 매칭
+        val primaryPattern = when {
+            clean.contains(".") -> {
+                val dotIdx = clean.indexOf('.')
+                val fracLen = clean.length - dotIdx - 1
+                when (fracLen) {
+                    1 -> "yyyy-MM-dd HH:mm:ss.S"
+                    2 -> "yyyy-MM-dd HH:mm:ss.SS"
+                    3 -> "yyyy-MM-dd HH:mm:ss.SSS"
+                    else -> "yyyy-MM-dd HH:mm:ss.SSSSSS"
+                }
+            }
+            clean.length == 19 -> "yyyy-MM-dd HH:mm:ss"
+            clean.length == 16 -> "yyyy-MM-dd HH:mm"
+            clean.length == 10 && clean.contains("-") -> "yyyy-MM-dd"
+            clean.length == 14 && !clean.contains("-") -> "yyyyMMddHHmmss"
+            else -> null
+        }
+
+        if (primaryPattern != null) {
+            try {
+                val date = getCachedFormatter(primaryPattern).parse(clean)
+                if (date != null) return date.time
+            } catch (_: Exception) {}
+        }
+
+        // 2. 예외적인 비정형 포맷 대비 폴백(Fallback)
+        val fallbackFormats = listOf(
             "yyyy-MM-dd HH:mm:ss",
             "yyyy-MM-dd HH:mm",
             "yyyy-MM-dd",
             "yyyyMMddHHmmss"
         )
-
-        for (f in formats) {
+        for (f in fallbackFormats) {
+            if (f == primaryPattern) continue
             try {
-                val sdf = SimpleDateFormat(f, Locale.US).apply {
-                    timeZone = kstZone
-                    isLenient = false
-                }
-                val date = sdf.parse(clean)
+                val date = getCachedFormatter(f).parse(clean)
                 if (date != null) return date.time
             } catch (_: Exception) {}
         }
@@ -407,8 +451,6 @@ class DgtDataSource {
     }
 
     private fun fmtDate(ms: Long): String {
-        return SimpleDateFormat("yy/MM/dd HH:mm", Locale.KOREAN).apply {
-            timeZone = kstZone
-        }.format(Date(ms))
+        return fmtDateFormatter.get()?.format(Date(ms)) ?: ""
     }
 }

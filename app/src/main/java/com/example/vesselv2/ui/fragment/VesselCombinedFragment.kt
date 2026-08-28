@@ -64,10 +64,6 @@ class VesselCombinedFragment : Fragment() {
     // 각 모선별 QC 데이터 상태
     private var qcStates = androidx.compose.runtime.mutableStateOf<Map<String, com.example.vesselv2.ui.view.QcLoadState>>(emptyMap())
 
-    // 실시간 자동 갱신 타이머 Coroutine Job
-    private var autoRefreshJob: Job? = null
-    private var isAutoRefreshOn: Boolean = false
-
     /**
      * [2026-08-28 추가] 그래프 접기/펼치기 상태
      * - SharedPreferences에 저장하여 앱 재시작 후에도 유지
@@ -102,7 +98,6 @@ class VesselCombinedFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        stopAutoRefresh()
         super.onDestroyView()
         _binding = null
     }
@@ -271,29 +266,13 @@ class VesselCombinedFragment : Fragment() {
     }
 
     /**
-     * 원클릭 수동 새로고침 버튼 및 실시간 자동 갱신 토글 설정
+     * 원클릭 수동 새로고침 버튼 설정
      */
     private fun setupRefreshControls() {
         // 원클릭 수동 새로고침 버튼 (손가락 슬라이드 없이 탭 1번으로 새로고침)
         binding.btnManualRefresh.setOnClickListener {
             Toast.makeText(requireContext(), "데이터를 갱신합니다.", Toast.LENGTH_SHORT).show()
             performFullRefresh()
-        }
-
-        // 실시간 자동 갱신 토글 버튼 (30초 주기 자동 갱신)
-        binding.btnAutoRefresh.setOnClickListener {
-            isAutoRefreshOn = !isAutoRefreshOn
-            if (isAutoRefreshOn) {
-                binding.btnAutoRefresh.text = "⚡ 실시간 30초 ON"
-                binding.btnAutoRefresh.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
-                startAutoRefresh()
-                Toast.makeText(requireContext(), "30초 주기 실시간 자동 갱신이 시작되었습니다.", Toast.LENGTH_SHORT).show()
-            } else {
-                binding.btnAutoRefresh.text = "⚡ 자동 off"
-                binding.btnAutoRefresh.setTextColor(resources.getColor(com.example.vesselv2.R.color.text_secondary, null))
-                stopAutoRefresh()
-                Toast.makeText(requireContext(), "실시간 자동 갱신이 정지되었습니다.", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
@@ -305,25 +284,6 @@ class VesselCombinedFragment : Fragment() {
             qcStates.value = newMap
         }
         viewModel.refreshAllData()
-    }
-
-    /** 30초 주기 실시간 자동 갱신 타이머 시작 */
-    private fun startAutoRefresh() {
-        stopAutoRefresh()
-        autoRefreshJob = viewLifecycleOwner.lifecycleScope.launch {
-            while (isActive) {
-                delay(30_000L)
-                if (isAutoRefreshOn) {
-                    performFullRefresh()
-                }
-            }
-        }
-    }
-
-    /** 자동 갱신 타이머 중단 */
-    private fun stopAutoRefresh() {
-        autoRefreshJob?.cancel()
-        autoRefreshJob = null
     }
 
     // ── Compose View 설정 (하단 QC 패널) ───────────────────────────────────
