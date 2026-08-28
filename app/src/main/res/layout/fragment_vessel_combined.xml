@@ -3,9 +3,10 @@
     fragment_vessel_combined.xml
     상단: 접안 예정 그래프 (BerthScheduleView)
     하단: WORKING 모선 QC 작업 현황 슬라이드 (ViewPager2)
-    [2026-08-28 리팩토링]
+    [2026-08-28 리팩토링 및 개선]
     - 기존 RecyclerView(입항예정리스트)는 삭제하지 않고 보존을 위해 주석 처리
     - 하단 영역에 ViewPager2(WORKING QC 현황 상시/수동조회) 배치
+    - 수동 원클릭 새로고침 버튼 및 실시간 자동 갱신 토글 추가 (손가락 당기기 불편 해소)
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -67,7 +68,7 @@
                     android:orientation="vertical"
                     android:visibility="gone">
 
-                    <!-- 섹션 타이틀 + 페이지 인디케이터 -->
+                    <!-- 섹션 타이틀 + 새로고침 버튼 + 자동 갱신 토글 + 페이지 인디케이터 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -85,6 +86,32 @@
                             android:textColor="@color/on_surface"
                             android:textSize="13sp"
                             android:textStyle="bold" />
+
+                        <!-- 실시간 자동 갱신 토글 버튼 -->
+                        <TextView
+                            android:id="@+id/btnAutoRefresh"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⚡ 자동 off"
+                            android:textSize="11sp"
+                            android:textColor="@color/text_secondary"
+                            android:background="@drawable/bg_rounded_corner"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="4dp"
+                            android:layout_marginEnd="6dp"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <!-- 원클릭 수동 새로고침 버튼 (손가락 당기기 대신 버튼 탭) -->
+                        <ImageButton
+                            android:id="@+id/btnManualRefresh"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@android:drawable/ic_popup_sync"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="새로고침"
+                            android:layout_marginEnd="8dp"
+                            app:tint="@color/md_primary" />
 
                         <!-- 페이지 인디케이터 (예: 1 / 2) -->
                         <TextView
