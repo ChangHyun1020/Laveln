@@ -14,7 +14,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * [어댑터] WorkingVesselQcAdapter — WORKING 모선 QC 현황 ViewPager2 어댑터
+ * 어댑터 WorkingVesselQcAdapter — WORKING 모선 QC 현황 ViewPager2 어댑터
  *
  * ▶ 역할:
  *   WORKING 상태인 모선 목록을 슬라이드(페이지) 형태로 표시합니다.
@@ -151,8 +151,8 @@ class WorkingVesselQcAdapter(
 
             when (state) {
                 is QcLoadState.NotLoaded -> showNotLoadedState()
-                is QcLoadState.Loading   -> showLoadingState()
-                is QcLoadState.Loaded    -> {
+                is QcLoadState.Loading -> showLoadingState()
+                is QcLoadState.Loaded -> {
                     val detail = state.detail
                     tvTotalQty.text = detail.totalQty
                     tvDischargeQty.text = detail.disQty
@@ -162,6 +162,7 @@ class WorkingVesselQcAdapter(
                     if (detail.qcList.isEmpty()) showNoQcState()
                     else showQcTableState(detail)
                 }
+
                 is QcLoadState.Error -> showErrorState(state.message)
             }
         }
@@ -221,7 +222,8 @@ class WorkingVesselQcAdapter(
                 rowView.findViewById<TextView>(R.id.tvSummaryComplete).text = complete.toString()
                 rowView.findViewById<TextView>(R.id.tvSummaryRemaining).text = remaining.toString()
 
-                rowView.findViewById<TextView>(R.id.tvCompDis).text = qc.completeDischarge.toString()
+                rowView.findViewById<TextView>(R.id.tvCompDis).text =
+                    qc.completeDischarge.toString()
                 rowView.findViewById<TextView>(R.id.tvCompLod).text = qc.completeLoad.toString()
                 rowView.findViewById<TextView>(R.id.tvRemDis).text = qc.plannedDischarge.toString()
                 rowView.findViewById<TextView>(R.id.tvRemLod).text = qc.plannedLoad.toString()
