@@ -1,6 +1,8 @@
 package com.example.vesselv2.ui.fragment
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -79,6 +81,22 @@ class VesselCombinedFragment : Fragment() {
     private var autoRefreshJob: Job? = null
     private var isAutoRefreshOn: Boolean = false
 
+    /**
+     * [2026-08-28 추가] 그래프 접기/펼치기 상태
+     * - SharedPreferences에 저장하여 앱 재시작 후에도 유지
+     * - 기본값: true (펼침) — 최초 진입 사용자가 그래프를 인지할 수 있도록
+     */
+    private var isGraphExpanded: Boolean = true
+
+    /** 그래프 접기/펼치기 애니메이션 Duration (ms) */
+    private val GRAPH_ANIM_DURATION = 250L
+
+    /** SharedPreferences 키 상수 */
+    companion object {
+        private const val PREF_NAME = "vessel_combined_pref"
+        private const val PREF_KEY_GRAPH_EXPANDED = "is_graph_expanded"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -89,6 +107,7 @@ class VesselCombinedFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupGraph()
+        setupGraphToggle()   // [2026-08-28 추가] 그래프 접기/펼치기 초기화
         setupSwipeRefresh()
         setupRefreshControls()
         setupViewPagerCallback()
@@ -109,6 +128,129 @@ class VesselCombinedFragment : Fragment() {
         binding.berthScheduleView.onItemClickListener = { item: TimeCalItem ->
             handleGraphItemClick(item)
         }
+    }
+
+    // ── 그래프 접기/펼치기 ────────────────────────────────────────────────────
+
+    /**
+     * [2026-08-28 추가] 그래프 접기/펼치기 초기화
+     *
+     * ▶ 동작:
+     *   1. SharedPreferences에서 마지막 상태를 복원하여 그래프 초기 표시 여부 결정
+     *   2. llGraphHeader 클릭 시 toggleGraph() 호출
+     *   3. 화살표(ivGraphChevron)는 펼침 시 0°, 접힘 시 180° 회전
+     */
+    private fun setupGraphToggle() {
+        // SharedPreferences에서 이전 상태 복원
+        val prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        isGraphExpanded = prefs.getBoolean(PREF_KEY_GRAPH_EXPANDED, true)
+
+        // 초기 상태 즉시 반영 (애니메이션 없이)
+        applyGraphState(animate = false)
+
+        // 헤더 행 클릭 시 접기/펼치기 토글
+        binding.llGraphHeader.setOnClickListener {
+            toggleGraph()
+        }
+    }
+
+    /**
+     * 그래프 접기/펼치기 토글
+     * 상태 전환 후 SharedPreferences에 저장하고 애니메이션 적용
+     */
+    private fun toggleGraph() {
+        isGraphExpanded = !isGraphExpanded
+
+        // SharedPreferences에 상태 저장 (앱 재시작 후에도 유지)
+        requireContext()
+            .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(PREF_KEY_GRAPH_EXPANDED, isGraphExpanded)
+            .apply()
+
+        applyGraphState(animate = true)
+    }
+
+    /**
+     * 현재 isGraphExpanded 상태를 UI에 반영합니다.
+     *
+     * @param animate true이면 높이 애니메이션 + 화살표 회전 적용, false이면 즉시 적용
+     */
+    private fun applyGraphState(animate: Boolean) {
+        val graphView = binding.scrollViewGraph
+        val chevron = binding.ivGraphChevron
+
+        if (animate) {
+            if (isGraphExpanded) {
+                // ── 펼치기: VISIBLE 후 높이 0 → 원래 높이 애니메이션 ──
+                graphView.visibility = View.VISIBLE
+                graphView.measure(
+                    View.MeasureSpec.makeMeasureSpec(
+                        (graphView.parent as View).width, View.MeasureSpec.EXACTLY
+                    ),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                )
+                val targetHeight = graphView.measuredHeight
+
+                ValueAnimator.ofInt(0, targetHeight).apply {
+                    duration = GRAPH_ANIM_DURATION
+                    addUpdateListener { anim ->
+                        graphView.layoutParams = graphView.layoutParams.also {
+                            it.height = anim.animatedValue as Int
+                        }
+                        graphView.requestLayout()
+                    }
+                    // 애니메이션 완료 후 높이 제한 해제 (wrap_content 복원)
+                    doOnEnd { graphView.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT }
+                    start()
+                }
+
+                // 화살표 0° (펼침 상태)
+                chevron.animate().rotation(0f).setDuration(GRAPH_ANIM_DURATION).start()
+
+            } else {
+                // ── 접기: 현재 높이 → 0 애니메이션 후 GONE ──
+                val startHeight = graphView.measuredHeight
+
+                ValueAnimator.ofInt(startHeight, 0).apply {
+                    duration = GRAPH_ANIM_DURATION
+                    addUpdateListener { anim ->
+                        graphView.layoutParams = graphView.layoutParams.also {
+                            it.height = anim.animatedValue as Int
+                        }
+                        graphView.requestLayout()
+                    }
+                    doOnEnd { graphView.visibility = View.GONE }
+                    start()
+                }
+
+                // 화살표 180° (접힘 상태)
+                chevron.animate().rotation(180f).setDuration(GRAPH_ANIM_DURATION).start()
+            }
+
+        } else {
+            // 애니메이션 없이 즉시 반영 (초기 상태 복원 시 사용)
+            if (isGraphExpanded) {
+                graphView.visibility = View.VISIBLE
+                graphView.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                chevron.rotation = 0f
+            } else {
+                graphView.visibility = View.GONE
+                chevron.rotation = 180f
+            }
+        }
+    }
+
+    /**
+     * ValueAnimator에서 애니메이션 종료 시 실행할 콜백을 DSL 스타일로 등록하는 확장 함수
+     * (android.animation.Animator.AnimatorListener 보일러플레이트 대체)
+     */
+    private fun ValueAnimator.doOnEnd(action: () -> Unit) {
+        addListener(object : android.animation.AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: android.animation.Animator) {
+                action()
+            }
+        })
     }
 
     // ── 새로고침 및 실시간 자동 갱신 설정 ───────────────────────────────────

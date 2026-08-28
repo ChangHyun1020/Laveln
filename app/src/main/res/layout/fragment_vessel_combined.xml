@@ -25,7 +25,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <!-- 1. 상단 그래프 영역 (테이블 사이즈 고정값 적용 - 상하 스크롤 제거) -->
+            <!-- 1. 상단 그래프 영역 (탭으로 접기/펼치기 가능) -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -33,18 +33,66 @@
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
-                <HorizontalScrollView
-                    android:id="@+id/scrollViewGraph"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:scrollbars="horizontal">
+                    android:orientation="vertical">
 
-                    <com.example.vesselv2.ui.view.BerthScheduleView
-                        android:id="@+id/berthScheduleView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </HorizontalScrollView>
+                    <!--
+                        [2026-08-28 추가] 그래프 접기/펼치기 헤더 행
+                        - 전체 행을 클릭하면 그래프 내용이 접히거나 펼쳐짐
+                        - ivGraphChevron: 접힘(▼) / 펼침(▲) 화살표 아이콘 (180° 애니메이션 적용)
+                        - 최소 터치 영역 48dp 보장
+                    -->
+                    <LinearLayout
+                        android:id="@+id/llGraphHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="12dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground">
 
+                        <!-- 📊 선석 현황 그래프 타이틀 -->
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="📊 선석 현황 그래프"
+                            android:textColor="@color/on_surface"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <!-- 접기/펼치기 화살표 아이콘 (코드에서 회전 애니메이션 적용) -->
+                        <ImageView
+                            android:id="@+id/ivGraphChevron"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/arrow_down_float"
+                            android:contentDescription="그래프 접기/펼치기"
+                            app:tint="@color/md_primary" />
+
+                    </LinearLayout>
+
+                    <!--
+                        [2026-08-28 추가] 그래프 내용 영역 (접기/펼치기 대상)
+                        - id="graphContentArea" 로 Fragment 코드에서 VISIBLE/GONE 제어
+                    -->
+                    <HorizontalScrollView
+                        android:id="@+id/scrollViewGraph"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="horizontal">
+
+                        <com.example.vesselv2.ui.view.BerthScheduleView
+                            android:id="@+id/berthScheduleView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </HorizontalScrollView>
+
+                </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <!-- 구분선 -->
