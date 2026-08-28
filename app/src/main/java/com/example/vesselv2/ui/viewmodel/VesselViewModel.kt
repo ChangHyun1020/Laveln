@@ -44,7 +44,7 @@ import java.util.*
  *   - graphStartMs: 그래프 시작 기준 시각 (KST 00:00:00)
  *   - vesselDetail: 선박 상세+QC 현황 (그래프 클릭 시 로드)
  *
- *   [공통]
+ *   공통
  *   - isLoading: 로딩 상태 (ProgressBar 제어)
  *   - uiEvent: 성공/오류 토스트 이벤트 (단발성)
  *
@@ -168,6 +168,7 @@ class VesselViewModel : ViewModel() {
     // ── 수동 날짜 필터 (선택적 사용) ────────────────────────────────────────
     /** 수동 필터 시작일 (null이면 기본 필터 적용) */
     var filterStartDateMs: Long? = null
+
     /** 수동 필터 종료일 (null이면 기본 필터 적용) */
     var filterEndDateMs: Long? = null
 
@@ -338,7 +339,8 @@ class VesselViewModel : ViewModel() {
             val etbMs = item.etbDateMs
             val matchStart = start?.let { etbMs >= it } ?: true
             val matchEnd = end?.let { etbMs <= it } ?: true
-            val matchSearch = if (query.isEmpty()) true else item.vesselName.uppercase().contains(query)
+            val matchSearch =
+                if (query.isEmpty()) true else item.vesselName.uppercase().contains(query)
             matchStart && matchEnd && matchSearch
         }
         _filteredList.value = filtered
@@ -394,8 +396,8 @@ class VesselViewModel : ViewModel() {
             // 작업중/접안: 항상 표시
             // 예정/다소: D-1 ~ D+7 범위내 ETB만 표시
             item.vesselStatus == "WORKING" || item.vesselStatus == "BERTHED" ||
-                ((item.vesselStatus == "PLANNED" || item.vesselStatus == "DEPARTED")
-                    && item.etbDateMs in yesterdayStart..displayEnd)
+                    ((item.vesselStatus == "PLANNED" || item.vesselStatus == "DEPARTED")
+                            && item.etbDateMs in yesterdayStart..displayEnd)
         }.sortedBy { it.etbDateMs } // ETB 오름차순 정렬
 
         _filteredList.value = filtered
@@ -524,7 +526,10 @@ class VesselViewModel : ViewModel() {
                         qcList = qcList
                     )
                     withContext(Dispatchers.Main) {
-                        Log.d("VesselViewModel", "QC 현황 조회 성공: ${item.vesselName}, QC ${qcList.size}개")
+                        Log.d(
+                            "VesselViewModel",
+                            "QC 현황 조회 성공: ${item.vesselName}, QC ${qcList.size}개"
+                        )
                         setVesselDetail(detailInfo)
                     }
                 } else {
@@ -567,7 +572,8 @@ class VesselViewModel : ViewModel() {
                 try {
                     val kstZone = TimeZone.getTimeZone("Asia/Seoul")
                     val cal = Calendar.getInstance(kstZone).apply { add(Calendar.DAY_OF_YEAR, -1) }
-                    val sdfParam = SimpleDateFormat("yyyyMMdd", Locale.US).apply { timeZone = kstZone }
+                    val sdfParam =
+                        SimpleDateFormat("yyyyMMdd", Locale.US).apply { timeZone = kstZone }
                     val fromDate = sdfParam.format(cal.time)
                     cal.add(Calendar.DAY_OF_YEAR, 9)
                     val toDate = sdfParam.format(cal.time)
@@ -596,7 +602,8 @@ class VesselViewModel : ViewModel() {
             }
 
             // 2. WORKING 모선 추출 후 병렬(Parallel Async)로 QC 작업 현황 전체 일괄 스크래핑
-            val workingItems = (filteredList.value ?: emptyList()).filter { it.vesselStatus == "WORKING" }
+            val workingItems =
+                (filteredList.value ?: emptyList()).filter { it.vesselStatus == "WORKING" }
             if (workingItems.isNotEmpty()) {
                 fetchAllWorkingVesselStatus(workingItems)
             } else {
