@@ -103,6 +103,14 @@ class VesselViewModel : ViewModel() {
     val vesselDetail: LiveData<VesselDetailInfo?> = _vesselDetail
 
     /**
+     * [2026-08-28 추가] WORKING 모선 전체의 QC 현황 목록
+     * Key: vesselName, Value: VesselDetailInfo (null이면 로딩 중)
+     * VesselCombinedFragment 하단 ViewPager2에서 구독합니다.
+     */
+    private val _workingVesselDetails = MutableLiveData<Map<String, VesselDetailInfo?>>(emptyMap())
+    val workingVesselDetails: LiveData<Map<String, VesselDetailInfo?>> = _workingVesselDetails
+
+    /**
      * [2026-04-20 추가] QC 상세 조회 진행 여부 플래그 (중복 클릭 방지 전용)
      *
      * ▶ 추가 배경:
@@ -532,6 +540,74 @@ class VesselViewModel : ViewModel() {
                 withContext(Dispatchers.Main) {
                     setLoading(false)
                     _isDetailLoading.value = false
+                }
+            }
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    //  WORKING 모선 전체 QC 현황 일괄 조회 (하단 상시 표시용)
+    // ────────────────────────────────────────────────────────────────────────
+
+    /**
+     * WORKING 상태 모선 목록 전체의 QC 현황을 순차적으로 조회합니다.
+     *
+     * ▶ 동작 방식:
+     *   1. 조회 시작 전 각 모선 상태를 null(로딩 중)으로 초기화하여 LiveData 업데이트
+     *   2. 모선별 순차 DGT API 호출 (fetchVesselDetails)
+     *   3. 개별 성공 시 해당 모선 결과만 즉시 LiveData 업데이트 (나머지는 유지)
+     *   4. 개별 실패 시 로그만 출력하고 계속 진행 (전체 조회 중단 없음)
+     *
+     * ▶ 호출 시점:
+     *   - VesselCombinedFragment에서 filteredList WORKING 모선 변경 감지 시
+     *   - SwipeRefresh 완료 후 WORKING 모선 목록 확인 시
+     *
+     * @param workingItems WORKING 상태인 TimeCalItem 목록
+     */
+    fun fetchAllWorkingVesselStatus(workingItems: List<TimeCalItem>) {
+        if (workingItems.isEmpty()) {
+            // WORKING 모선이 없으면 빈 맵으로 초기화
+            _workingVesselDetails.postValue(emptyMap())
+            return
+        }
+
+        // 모든 모선을 null(로딩 중) 상태로 초기화하여 UI에 ProgressBar 표시
+        val initialMap = workingItems.associate { it.vesselName to null as VesselDetailInfo? }
+        _workingVesselDetails.postValue(initialMap)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            // 현재까지 수집된 결과 맵 (가변)
+            val resultMap = initialMap.toMutableMap()
+
+            for (item in workingItems) {
+                try {
+                    val result = dgtDataSource.fetchVesselDetails(item)
+                    if (result != null) {
+                        val (obj, qcList) = result
+                        val detailInfo = VesselDetailInfo(
+                            item = item,
+                            disQty = obj.optString("dischargeQty", "0"),
+                            lodQty = obj.optString("loadQty", "0"),
+                            shftQty = obj.optString("shiftQty", "0"),
+                            statusStr = obj.optString("status"),
+                            qcList = qcList
+                        )
+                        resultMap[item.vesselName] = detailInfo
+                        // 개별 모선 조회 완료 시 즉시 LiveData 업데이트
+                        // (Map 복사본으로 postValue → 불변성 보장)
+                        _workingVesselDetails.postValue(resultMap.toMap())
+                    } else {
+                        // 조회 실패: null 유지 (로딩 실패 상태)
+                        resultMap[item.vesselName] = null
+                        _workingVesselDetails.postValue(resultMap.toMap())
+                        android.util.Log.w("VesselViewModel",
+                            "fetchAllWorkingVesselStatus: ${item.vesselName} 조회 실패")
+                    }
+                } catch (e: Exception) {
+                    resultMap[item.vesselName] = null
+                    _workingVesselDetails.postValue(resultMap.toMap())
+                    android.util.Log.e("VesselViewModel",
+                        "fetchAllWorkingVesselStatus 오류: ${item.vesselName}", e)
                 }
             }
         }

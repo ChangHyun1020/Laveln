@@ -497,7 +497,16 @@ class DgtDataSource {
             // 고유 식별 코드 — 동명 선박 구분 및 정확한 QC 조회에 사용
             vesselCode = obj.optString("vesselCode", ""),
             voyageSeq = obj.optString("voyageSeq", ""),
-            voyageYear = obj.optString("voyageYear", "")
+            voyageYear = obj.optString("voyageYear", ""),
+            // QC 투입 크레인 대수 — DGT API 필드명 우선순위로 파싱 (없으면 0)
+            // 가능한 필드명: craneWorkCount → allocCraneCount → qcCount → craneCount 순
+            craneCount = when {
+                obj.has("craneWorkCount") -> obj.optInt("craneWorkCount", 0)
+                obj.has("allocCraneCount") -> obj.optInt("allocCraneCount", 0)
+                obj.has("qcCount")         -> obj.optInt("qcCount", 0)
+                obj.has("craneCount")      -> obj.optInt("craneCount", 0)
+                else                       -> 0
+            }
         )
     }
 

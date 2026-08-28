@@ -38,7 +38,8 @@ data class TimeCalItem(
     val shiftQty: String = "0",
     val vesselCode: String = "",
     val voyageSeq: String = "",
-    val voyageYear: String = ""
+    val voyageYear: String = "",
+    val craneCount: Int = 0  // QC 투입 크레인 대수 (그래프 바에 표시: nG 형태)
 )
 
 @Suppress("DEPRECATION")

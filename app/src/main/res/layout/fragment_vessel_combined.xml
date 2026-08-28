@@ -2,39 +2,144 @@
 <!--
     fragment_vessel_combined.xml
     상단: 접안 예정 그래프 (BerthScheduleView)
-    하단: 접안 예정 리스트 (RecyclerView - CardView 스타일)
-    2026-03-18 리모델링 작업
+    하단: WORKING 모선 QC 작업 현황 슬라이드 (ViewPager2)
+    [2026-08-28 리팩토링]
+    - 기존 RecyclerView(입항예정리스트)는 삭제하지 않고 보존을 위해 주석 처리
+    - 하단 영역에 ViewPager2(WORKING QC 현황 상시/수동조회) 배치
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/background_light">
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_light">
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/swipeRefreshLayout" android:layout_width="match_parent" android:layout_height="match_parent">
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
             <!-- 1. 상단 그래프 영역 (테이블 사이즈 고정값 적용 - 상하 스크롤 제거) -->
-            <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="8dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
 
-                <HorizontalScrollView android:id="@+id/scrollViewGraph" android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="horizontal">
+                <HorizontalScrollView
+                    android:id="@+id/scrollViewGraph"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="horizontal">
 
-                    <com.example.vesselv2.ui.view.BerthScheduleView android:id="@+id/berthScheduleView" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    <com.example.vesselv2.ui.view.BerthScheduleView
+                        android:id="@+id/berthScheduleView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </HorizontalScrollView>
 
             </androidx.cardview.widget.CardView>
 
             <!-- 구분선 -->
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider_color" android:layout_marginHorizontal="8dp"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider_color"
+                android:layout_marginHorizontal="8dp" />
 
-            <!-- 2. 하단 리스트 영역 (남은 공간 모두 차지) -->
-            <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+            <!-- 2. 하단 WORKING 모선 QC 현황 영역 -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
 
-                <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerView" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingHorizontal="8dp" android:paddingTop="4dp" android:paddingBottom="16dp" />
+                <!-- WORKING 모선 QC 현황 슬라이드 (ViewPager2) -->
+                <LinearLayout
+                    android:id="@+id/llWorkingSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
-                <!-- 빈 상태 안내 -->
-                <TextView android:id="@+id/tvEmpty" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:text="@string/no_schedule_data" android:textColor="@color/text_secondary" android:textSize="14sp" android:visibility="gone" />
+                    <!-- 섹션 타이틀 + 페이지 인디케이터 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="12dp"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="작업 중인 모선 QC 현황"
+                            android:textColor="@color/on_surface"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <!-- 페이지 인디케이터 (예: 1 / 2) -->
+                        <TextView
+                            android:id="@+id/tvPageIndicator"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1 / 1"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <!-- ViewPager2: 모선별 QC 현황 슬라이드 (옵션 B) -->
+                    <androidx.viewpager2.widget.ViewPager2
+                        android:id="@+id/vpWorkingVessels"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                </LinearLayout>
+
+                <!--
+                    ===================================================================
+                    [유지보수용 보존 주석] 기존 입항 예정 카드 리스트 (RecyclerView)
+                    사용자의 요청으로 삭제하지 않고 추후 레거시 참고 및 복구를 위해 주석 처리함.
+                    ===================================================================
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingHorizontal="8dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="16dp"
+                    android:visibility="gone" />
+                -->
+
+                <!-- 빈 상태 안내 (WORKING 모선 없음) -->
+                <TextView
+                    android:id="@+id/tvEmpty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="현재 작업 중인 모선이 없습니다."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
 
                 <!-- 로딩 -->
-                <ProgressBar android:id="@+id/progressBar" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:visibility="gone" />
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
 
             </FrameLayout>
 

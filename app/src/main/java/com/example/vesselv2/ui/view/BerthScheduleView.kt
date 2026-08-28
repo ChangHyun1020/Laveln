@@ -341,8 +341,10 @@ class BerthScheduleView @JvmOverloads constructor(
         val padX = 7f
 
         val etbStr = formatTimeLabel(item.etbDateMs)
-        // [2026-07-09 수정] 모선명 아래, 시간(ETB) 옆에 작업량 표시
-        val etbWithVol = "$etbStr  [${item.dischargeQty}/${item.loadQty}/${item.shiftQty}]"
+        // QC 투입 대수 표시: craneCount > 0이면 "nG " 접두어 추가 (예: "3G [699/1540/18]")
+        val cranePrefix = if (item.craneCount > 0) "${item.craneCount}G " else ""
+        // [2026-07-09 수정] 모선명 아래, 시간(ETB) 옆에 QC 대수 + 작업량 표시
+        val etbWithVol = "$etbStr  $cranePrefix[${item.dischargeQty}/${item.loadQty}/${item.shiftQty}]"
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText(etbWithVol, barRect.left + padX, textY, paint)
 
